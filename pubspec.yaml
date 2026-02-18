@@ -1,5 +1,5 @@
-name: wordle_flutter_app
-description: "A new Flutter project."
+name: wordle_flutter
+description: "A Wordle clone made with Flutter. This project is for educational purposes and is not affiliated with the original Wordle game or its creators."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -34,6 +34,12 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  just_audio: ^0.9.18
+  just_audio_windows: ^0.2.2
+  shared_preferences: ^2.5.4
+  shared_preferences_windows: ^2.4.1
+  shared_preferences_android: ^2.4.20
+  shared_preferences_foundation: ^2.5.6
 
 dev_dependencies:
   flutter_test:
@@ -45,6 +51,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -56,6 +68,14 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/sounds/click.mp3
+    - assets/sounds/background.mp3
+    - assets/sounds/send.mp3
+    - assets/sounds/win.mp3
+    - assets/sounds/lose.mp3
+    - assets/legal_words.txt
+    - assets/legal_guesses.txt
 
   # To add assets to your application, add an assets section, like this:
   # assets:
