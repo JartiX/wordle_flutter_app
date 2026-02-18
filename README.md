@@ -1,17 +1,38 @@
-# wordle_flutter_app
+# Wordle
 
-A new Flutter project.
+## A Wordle clone made with Flutter.
 
-## Getting Started
+## Features
+- 6 attempts to guess a 5-letter word
+- Hints after each guess (green for correct letter and position, yellow for correct letter but wrong position, red for incorrect letter)
+- Responsive design for different screen sizes
+- Light and dark themes
+- Sound effects
 
-This project is a starting point for a Flutter application.
+## How to Run
+1. Make sure you have Flutter installed on your machine. If you don't have it, follow the instructions on the [Flutter website](https://flutter.dev/docs/get-started/install).
+2. Clone this repository:
+    ```
+    git clone
+    ```
+3. Navigate to the project directory:
+    ```
+    cd wordle_flutter_app
+    ``` 
+4. Get the dependencies:
+    ```
+    flutter pub get
+    ```
+5. Run the app:
+    ```
+    flutter run
+    ```
 
-A few resources to get you started if this is your first Flutter project:
+## Screenshots
+![Screenshot 1](screenshots/screenshot1.png)
+![Screenshot 2](screenshots/screenshot2.png)
+![Screenshot 3](screenshots/screenshot3.png)
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
