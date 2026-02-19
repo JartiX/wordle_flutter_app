@@ -1,79 +1,78 @@
+import 'dart:ui';
+
+import '../controllers/settings_controller.dart';
 import '../services/audio_player_service.dart';
-import 'shared_preferences_controller.dart';
-import 'package:flutter/foundation.dart';
 
 class AudioController {
+  final SettingsController _settings;
   final AudioPlayerService _audioService;
-  final SharedPreferencesController _prefsController;
 
-  final ValueNotifier<bool> audioMuted = ValueNotifier(true);
+  AudioController(this._audioService, this._settings);
 
-  AudioController(this._audioService, this._prefsController);
+  void init() {
+    _settings.musicEnabled.addListener(_handleMusicToggle);
+    _settings.volume.addListener(_handleVolumeChange);
+  }
 
-  Future<void> load() async {
-    audioMuted.value = await _prefsController.getAudioMuted();
-    if (!audioMuted.value) {
-      await _audioService.playBackground();
+  void _handleMusicToggle() {
+    if (_settings.musicEnabled.value) {
+      _audioService.playBackground();
+    } else {
+      _audioService.stopBackground();
     }
   }
 
-  Future<void> toggleAudio() async {
-    audioMuted.value = !audioMuted.value;
-    await _prefsController.setAudioMuted(audioMuted.value);
+  void _handleVolumeChange() {
+    if (_settings.musicEnabled.value) {
+      _audioService.setVolume(_settings.volume.value);
+    }
+  }
 
-    if (audioMuted.value) {
-      _audioService.stopBackground();
-    } else {
+  Future<void> load() async {
+    if (_settings.musicEnabled.value) {
       _audioService.playBackground();
     }
   }
 
-  Future<void> playBackground() async {
-    if (!audioMuted.value) {
-      await _audioService.playBackground();
-    }
-  }
-
-  Future<void> pauseBackground() async {
-    if (!audioMuted.value) {
-      await _audioService.pauseBackground();
-    }
-  }
-
-  Future<void> resumeBackground() async {
-    if (!audioMuted.value) {
-      await _audioService.resumeBackground();
-      
-    }
-  }
-
-  Future<void> stopBackground() async {
-    if (!audioMuted.value) {
-      await _audioService.stopBackground();
-    }
-  }
-
   Future<void> playClick() async {
-    if (!audioMuted.value) {
+    if (_settings.sfxEnabled.value) {
       await _audioService.playClick();
     }
   }
 
   Future<void> playSend() async {
-    if (!audioMuted.value) {
+    if (_settings.sfxEnabled.value) {
       await _audioService.playSend();
     }
   }
 
   Future<void> playWin() async {
-    if (!audioMuted.value) {
+    if (_settings.sfxEnabled.value) {
       await _audioService.playWin();
     }
   }
 
   Future<void> playLose() async {
-    if (!audioMuted.value) {
+    if (_settings.sfxEnabled.value) {
       await _audioService.playLose();
     }
+  }
+
+  void handleLifecycle(AppLifecycleState state) {
+    if (!_settings.musicEnabled.value) return;
+
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _audioService.pauseBackground();
+    }
+
+    if (state == AppLifecycleState.resumed) {
+      _audioService.resumeBackground();
+    }
+  }
+
+  void dispose() {
+    _settings.musicEnabled.removeListener(_handleMusicToggle);
+    _settings.volume.removeListener(_handleVolumeChange);
   }
 }
