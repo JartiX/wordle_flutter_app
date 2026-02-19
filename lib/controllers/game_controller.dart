@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'settings_controller.dart';
+import 'statistics_controller.dart';
 import '../models/game.dart';
 import '../models/word.dart';
 import '../models/types.dart';
@@ -10,6 +11,10 @@ class GameController {
 
   SettingsController get settings => _settings;
 
+  final StatisticsController _statisticsController;
+
+  StatisticsController get statisticsController => _statisticsController;
+
   late Game _game;
 
   Game get game => _game;
@@ -18,9 +23,21 @@ class GameController {
   bool get didLose => _game.didLose;
   Word get hiddenWord => _game.hiddenWord;
 
+  bool isRightLength(String guess) => guess.length == wordLength;
+
   final ValueNotifier<List<Word>> guessesNotifier = ValueNotifier<List<Word>>(
     [],
   );
+
+  void init() {
+    _createGame();
+
+    _settings.attempts.addListener(() {
+      _createGame();
+    });
+  }
+
+  GameController(this._settings, this._statisticsController);
 
   final ValueNotifier<GameEvent?> gameEvent = ValueNotifier(null);
 
@@ -35,21 +52,13 @@ class GameController {
       );
     } else if (_game.didWin) {
       gameEvent.value = GameEvent(status: GameStatus.won);
+      _statisticsController.recordGame(won: true, attempts: _game.numAllowedGuesses);
     } else if (_game.didLose) {
       gameEvent.value = GameEvent(status: GameStatus.lost);
+      _statisticsController.recordGame(won: false);
     }
 
     return result;
-  }
-
-  GameController(this._settings);
-
-  void init() {
-    _createGame();
-
-    _settings.attempts.addListener(() {
-      _createGame();
-    });
   }
 
   void _createGame() {
