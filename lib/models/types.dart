@@ -1,4 +1,5 @@
 const defaultNumGuesses = 5;
+const wordLength = 5;
 
 enum HitType { none, hit, partial, miss, removed }
 

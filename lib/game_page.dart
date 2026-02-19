@@ -7,7 +7,6 @@ import 'widgets/top_toast.dart';
 import 'controllers/audio_controller.dart';
 import 'controllers/game_controller.dart';
 import 'models/word.dart';
-import 'events/game_events.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({
@@ -180,6 +179,7 @@ class _GamePageState extends State<GamePage> {
                       ),
                       GuessInput(
                         audioController: widget.audioController,
+                        gameController: widget.gameController,
                         onRestart: () {
                           widget.gameController.resetGame();
                         },

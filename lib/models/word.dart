@@ -8,7 +8,7 @@ class Word with IterableMixin<Letter> {
   static final WordRepository _repository = WordRepository();
 
   factory Word.empty() {
-    return Word(List.filled(5, (char: '', type: HitType.none)));
+    return Word(List.filled(wordLength, (char: '', type: HitType.none)));
   }
 
   factory Word.fromString(String guess) {
