@@ -15,13 +15,11 @@ class TopToast extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.deepPurple.shade200.withValues(alpha: .9)
-              : Colors.deepPurple.shade300.withValues(alpha: .9),
+          color: theme.colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: isDark ? Colors.black54 : Colors.black26,
+              color: isDark ? theme.primaryColorLight.withValues(alpha: .2) : theme.primaryColorDark.withValues(alpha: .2),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),
@@ -30,7 +28,7 @@ class TopToast extends StatelessWidget {
         child: Text(
           message,
           style: TextStyle(
-            color: isDark ? Colors.black : Colors.white,
+            color: theme.colorScheme.onPrimaryContainer,
             fontWeight: FontWeight.bold,
           ),
         ),

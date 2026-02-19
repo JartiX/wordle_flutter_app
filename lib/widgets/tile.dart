@@ -56,14 +56,14 @@ class _TileState extends State<Tile> {
     final gradient = widget.hitType == HitType.none
         ? LinearGradient(
             colors: [
-              isDark ? Colors.grey.shade900 : Colors.white,
-              isDark ? Colors.grey.shade800 : Colors.white70,
+              isDark ? theme.colorScheme.surfaceBright.withValues(alpha: .4) : theme.colorScheme.onSecondary .withValues(alpha: .4),
+              isDark ? theme.colorScheme.surfaceBright.withValues(alpha: .95) : theme.colorScheme.onSecondary.withValues(alpha: .95),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           )
         : LinearGradient(
-            colors: [baseColor.withValues(alpha: .9), baseColor],
+            colors: [baseColor.withValues(alpha: .7), baseColor],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           );
@@ -82,16 +82,14 @@ class _TileState extends State<Tile> {
           boxShadow: [
             BoxShadow(
               color: isDark
-                  ? Colors.black.withValues(alpha: .6)
-                  : Colors.black.withValues(alpha: .15),
+                  ? theme.colorScheme.surfaceBright .withValues(alpha: .1)
+                  : theme.colorScheme.inversePrimary .withValues(alpha: .6),
               offset: const Offset(2, 4),
               blurRadius: 6,
             ),
           ],
           border: Border.all(
-            color: isDark
-                ? Colors.deepPurple.shade200
-                : Colors.deepPurple.shade300,
+            color: theme.colorScheme.outline.withValues(alpha: .7),
             width: 2,
           ),
         ),
