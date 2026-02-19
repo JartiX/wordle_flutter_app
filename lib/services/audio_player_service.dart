@@ -11,10 +11,8 @@ class AudioPlayerService {
   factory AudioPlayerService() => _instance;
 
   Future<void> playBackground() async {
-    // Если уже играет, ничего не делаем
     if (_backgroundPlayer.playing) return;
 
-    // Если уже открыт тот же Asset, просто play
     final current = _backgroundPlayer.audioSource;
     if (current == null) {
       await _backgroundPlayer.setAsset(Assets.backgroundMusic);
@@ -22,6 +20,10 @@ class AudioPlayerService {
     }
 
     await _backgroundPlayer.play();
+  }
+
+  Future<void> setVolume(double volume) async {
+    await _backgroundPlayer.setVolume(volume);
   }
 
   Future<void> pauseBackground() async {
@@ -38,6 +40,7 @@ class AudioPlayerService {
 
   Future<void> _playEffect(String asset) async {
     final player = AudioPlayer();
+    await player.setVolume(_backgroundPlayer.volume);
     await player.setAsset(asset);
     await player.play();
 

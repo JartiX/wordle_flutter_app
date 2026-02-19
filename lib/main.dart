@@ -1,10 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'services/audio_player_service.dart';
 import 'repositories/word_repository.dart';
 import 'start_screen.dart';
-import 'controllers/shared_preferences_controller.dart';
 import 'controllers/audio_controller.dart';
+import 'controllers/settings_controller.dart';
+import 'controllers/game_controller.dart';
+import 'controllers/theme_controller.dart';
+import 'services/settings_service.dart';
+import 'widgets/settings_widget.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,151 +31,168 @@ class MainApp extends StatefulWidget {
   State<MainApp> createState() => _MainAppState();
 }
 
-class _MainAppState extends State<MainApp> {
-  late final AudioController _audioController;
+class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
+  SettingsController? _settingsController;
+  AudioController? _audioController;
+  GameController? _gameController;
+  ThemeController? _themeController;
 
-  ThemeMode _themeMode = ThemeMode.system;
-
-  void _toggleTheme() {
-    setState(() {
-      if (_themeMode == ThemeMode.dark) {
-        _themeMode = ThemeMode.light;
-      } else {
-        _themeMode = ThemeMode.dark;
-      }
-    });
-  }
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
+
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    _settingsController = SettingsController(SettingsService());
+    await _settingsController!.load();
+
     _audioController = AudioController(
       AudioPlayerService(),
-      SharedPreferencesController(),
+      _settingsController!,
     );
+    _audioController!.init();
 
-    _audioController.load().then((_) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _audioController.playBackground();
-      });
-      setState(() {});
+    _gameController = GameController(_settingsController!);
+    _gameController!.init();
+
+    _themeController = ThemeController(_settingsController!);
+
+    await _audioController!.load();
+    setState(() {
+      _initialized = true;
     });
   }
 
-  void _onAudioButtonPressed() async {
-    _audioController.toggleAudio();
-    setState(() {});
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    _audioController?.handleLifecycle(state);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _audioController?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      themeMode: _themeMode,
+    if (!_initialized || _audioController == null || _gameController == null) {
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
 
-      // 🌞 Светлая тема
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: Colors.deepPurple.shade50,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: true,
-          titleTextStyle: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            color: Colors.black87,
-          ),
-          iconTheme: IconThemeData(color: Colors.deepPurple.shade300),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepPurple.shade300,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return ValueListenableBuilder(
+      valueListenable: _settingsController!.theme,
+      builder: (context, theme, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          themeMode: _themeController!.themeMode,
+
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.light,
+              outline: Colors.deepPurple.shade300,
             ),
-            elevation: 4,
-          ),
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.black87),
-          bodyMedium: TextStyle(color: Colors.black54),
-          titleLarge: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-
-      // 🌚 Тёмная тема
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: const ColorScheme(
-          brightness: Brightness.dark,
-          primary: Color(0xFFBB86FC),
-          onPrimary: Colors.white,
-          secondary: Color(0xFF03DAC6),
-          onSecondary: Colors.black,
-          error: Color(0xFFCF6679),
-          onError: Colors.white,
-          surface: Color(0xFF1E1E2E),
-          onSurface: Colors.white,
-        ),
-        scaffoldBackgroundColor: const Color(0xFF121212),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: true,
-          titleTextStyle: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            color: Colors.white,
-          ),
-          iconTheme: IconThemeData(color: Color(0xFFBB86FC)),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFBB86FC),
-            foregroundColor: Colors.black,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+            scaffoldBackgroundColor: Colors.deepPurple.shade50,
+            appBarTheme: AppBarTheme(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              centerTitle: true,
+              titleTextStyle: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+                color: Colors.black87,
+              ),
+              iconTheme: IconThemeData(color: Colors.deepPurple.shade300),
             ),
-            elevation: 4,
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple.shade300,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
+              ),
+            ),
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(color: Colors.black87),
+              bodyMedium: TextStyle(color: Colors.black54),
+              titleLarge: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.white),
-          bodyMedium: TextStyle(color: Colors.white70),
-          titleLarge: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
 
-      home: _RootScreen(
-        audioController: _audioController,
-        themeMode: _themeMode,
-        onToggleTheme: _toggleTheme,
-        onToggleAudio: _onAudioButtonPressed,
-      ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
+              outline: Colors.deepPurple.shade200,
+            ),
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              centerTitle: true,
+              titleTextStyle: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+                color: Colors.white,
+              ),
+              iconTheme: IconThemeData(color: Color(0xFFBB86FC)),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFBB86FC),
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
+              ),
+            ),
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(color: Colors.white),
+              bodyMedium: TextStyle(color: Colors.white70),
+              titleLarge: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+
+          home: _RootScreen(
+            audioController: _audioController!,
+            gameController: _gameController!,
+            themeMode: _themeController!.themeMode,
+          ),
+        );
+      },
     );
   }
 }
 
 class _RootScreen extends StatelessWidget {
   final AudioController audioController;
+  final GameController gameController;
+
   final ThemeMode themeMode;
-  final VoidCallback onToggleTheme;
-  final VoidCallback onToggleAudio;
 
   const _RootScreen({
     required this.audioController,
+    required this.gameController,
     required this.themeMode,
-    required this.onToggleTheme,
-    required this.onToggleAudio,
   });
 
   @override
@@ -183,18 +205,18 @@ class _RootScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("ВОРДЛИ"),
         actions: [
-          ValueListenableBuilder<bool>(
-            valueListenable: audioController.audioMuted,
-            builder: (context, muted, _) {
-              return IconButton(
-                onPressed: onToggleAudio,
-                icon: Icon(muted ? Icons.volume_off : Icons.volume_up),
+          IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => SettingsWidget(
+                  gameController: gameController,
+                  audioController: audioController,
+                ),
               );
             },
-          ),
-          IconButton(
-            onPressed: onToggleTheme,
-            icon: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
+            icon: Icon(Icons.settings_rounded),
           ),
         ],
       ),
@@ -212,7 +234,10 @@ class _RootScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                 ),
         ),
-        child: StartScreen(audioController: audioController),
+        child: StartScreen(
+          audioController: audioController,
+          gameController: gameController,
+        ),
       ),
     );
   }
