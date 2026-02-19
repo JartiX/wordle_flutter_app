@@ -10,7 +10,10 @@ class AudioPlayerService {
 
   factory AudioPlayerService() => _instance;
 
-  Future<void> playBackground() async {
+  Future<void> playBackground({
+    int steps = 10,
+    Duration stepDuration = const Duration(milliseconds: 30),
+  }) async {
     if (_backgroundPlayer.playing) return;
 
     final current = _backgroundPlayer.audioSource;
@@ -19,7 +22,17 @@ class AudioPlayerService {
       _backgroundPlayer.setLoopMode(LoopMode.one);
     }
 
+    final targetVolume = _backgroundPlayer.volume;
+    await _backgroundPlayer.setVolume(0);
     await _backgroundPlayer.play();
+
+    for (int i = 1; i <= steps; i++) {
+      final v = targetVolume * i / steps;
+      await _backgroundPlayer.setVolume(v);
+      await Future.delayed(stepDuration);
+    }
+
+    await _backgroundPlayer.setVolume(targetVolume);
   }
 
   Future<void> setVolume(double volume) async {
@@ -34,8 +47,19 @@ class AudioPlayerService {
     await _backgroundPlayer.play();
   }
 
-  Future<void> stopBackground() async {
+  Future<void> stopBackground({
+    int steps = 10,
+    Duration stepDuration = const Duration(milliseconds: 20),
+  }) async {
+    final initialVolume = _backgroundPlayer.volume;
+    for (int i = steps; i > 0; i--) {
+      _backgroundPlayer.setVolume(initialVolume * i / steps);
+      await Future.delayed(stepDuration);
+    }
     await _backgroundPlayer.stop();
+    await _backgroundPlayer.setVolume(
+      initialVolume,
+    ); // вернуть на следующий запуск
   }
 
   Future<void> _playEffect(String asset) async {

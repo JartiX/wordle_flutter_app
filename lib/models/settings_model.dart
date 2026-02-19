@@ -20,7 +20,7 @@ class SettingsModel {
       attempts: 6,
       sfxEnabled: true,
       musicEnabled: true,
-      volume: 1.0,
+      volume: 0.5,
       theme: 'system',
     );
   }

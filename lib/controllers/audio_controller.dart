@@ -10,15 +10,18 @@ class AudioController {
   AudioController(this._audioService, this._settings);
 
   void init() {
+    _audioService.setVolume(_settings.volume.value);
+
     _settings.musicEnabled.addListener(_handleMusicToggle);
     _settings.volume.addListener(_handleVolumeChange);
   }
 
-  void _handleMusicToggle() {
+  void _handleMusicToggle() async{
     if (_settings.musicEnabled.value) {
-      _audioService.playBackground();
+      await _audioService.setVolume(_settings.volume.value);
+      await _audioService.playBackground();
     } else {
-      _audioService.stopBackground();
+      await _audioService.stopBackground();
     }
   }
 
