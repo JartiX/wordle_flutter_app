@@ -44,6 +44,12 @@ class AudioController {
     }
   }
 
+  Future<void> playPop() async {
+    if (_settings.sfxEnabled.value) {
+      await _audioService.playPop();
+    }
+  }
+  
   Future<void> playSend() async {
     if (_settings.sfxEnabled.value) {
       await _audioService.playSend();

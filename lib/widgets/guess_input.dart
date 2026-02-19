@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'buttons/animated_send_button.dart';
 import 'buttons/animated_restart_button.dart';
 import '../controllers/audio_controller.dart';
+import '../controllers/game_controller.dart';
 
 class GuessInput extends StatefulWidget {
   const GuessInput({
@@ -10,11 +11,13 @@ class GuessInput extends StatefulWidget {
     required this.onSubmitGuess,
     required this.onRestart,
     required this.audioController,
+    required this.gameController
   });
 
   final void Function(String) onSubmitGuess;
   final VoidCallback onRestart;
   final AudioController audioController;
+  final GameController gameController;
 
   @override
   State<GuessInput> createState() => _GuessInputState();
@@ -31,9 +34,13 @@ class _GuessInputState extends State<GuessInput> {
   void initState() {
     super.initState();
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).unfocus();
+    });
+
     _textEditingController.addListener(() {
       setState(() {
-        isSubmitEnabled = _textEditingController.text.trim().length == 5;
+        isSubmitEnabled = widget.gameController.isRightLength(_textEditingController.text.trim());
       });
     });
   }
@@ -51,14 +58,13 @@ class _GuessInputState extends State<GuessInput> {
     final isDark = theme.brightness == Brightness.dark;
     final isFocused = _focusNode.hasFocus;
 
-    final backgroundColor = isDark ? Colors.grey.shade900 : Colors.white;
-    final boxShadowColor = isDark
-        ? Colors.black.withValues(alpha: .3)
-        : Colors.deepPurple.withValues(alpha: .1);
+    final backgroundColor = theme.colorScheme.surfaceBright;
+    final boxShadowColor = theme.colorScheme.outline.withValues(alpha: 0.1);
     final gradientFocused = LinearGradient(
-      colors: isDark
-          ? [Colors.deepPurple.shade700, Colors.deepPurple.shade400]
-          : [Colors.deepPurple.shade200, Colors.deepPurple.shade400],
+      colors: [
+        theme.colorScheme.outline.withValues(alpha: 0.5),
+        theme.colorScheme.outline.withValues(alpha: 0.8),
+      ],
     );
 
     return Padding(
@@ -112,7 +118,9 @@ class _GuessInputState extends State<GuessInput> {
                       hintText: "ВВЕДИТЕ СЛОВО",
                       hintStyle: TextStyle(
                         color: isDark ? Colors.white54 : Colors.black38,
-                        fontSize: MediaQuery.of(context).size.width < 400 ? 10 : 16,
+                        fontSize: MediaQuery.of(context).size.width < 400
+                            ? 10
+                            : 16,
                       ),
                     ),
                     onChanged: (_) => setState(() {}),
@@ -126,7 +134,6 @@ class _GuessInputState extends State<GuessInput> {
                             _focusNode.requestFocus();
                           }
                         : (_) => _focusNode.requestFocus(),
-                    autofocus: true,
                     textInputAction: isSubmitEnabled
                         ? TextInputAction.send
                         : TextInputAction.none,

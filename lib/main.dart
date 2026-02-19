@@ -1,14 +1,16 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'services/audio_player_service.dart';
 import 'repositories/word_repository.dart';
 import 'start_screen.dart';
+import 'statistics_page.dart';
 import 'controllers/audio_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'controllers/game_controller.dart';
+import 'controllers/statistics_controller.dart';
 import 'controllers/theme_controller.dart';
 import 'services/settings_service.dart';
+import 'services/statistics_service.dart';
 import 'widgets/settings_widget.dart';
 
 void main() async {
@@ -35,6 +37,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   SettingsController? _settingsController;
   AudioController? _audioController;
   GameController? _gameController;
+  StatisticsController? _statisticsController;
   ThemeController? _themeController;
 
   bool _initialized = false;
@@ -58,7 +61,13 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
     );
     _audioController!.init();
 
-    _gameController = GameController(_settingsController!);
+    _statisticsController = StatisticsController(StatisticsService());
+    await _statisticsController!.load();
+
+    _gameController = GameController(
+      _settingsController!,
+      _statisticsController!,
+    );
     _gameController!.init();
 
     _themeController = ThemeController(_settingsController!);
@@ -142,6 +151,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
               brightness: Brightness.dark,
               outline: Colors.deepPurple.shade200,
             ),
+            cardColor: Color(0xFF1E1E2E),
             scaffoldBackgroundColor: const Color(0xFF121212),
             appBarTheme: const AppBarTheme(
               backgroundColor: Colors.transparent,
@@ -175,6 +185,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           home: _RootScreen(
             audioController: _audioController!,
             gameController: _gameController!,
+            statisticsController: _statisticsController!,
             themeMode: _themeController!.themeMode,
           ),
         );
@@ -186,18 +197,20 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
 class _RootScreen extends StatelessWidget {
   final AudioController audioController;
   final GameController gameController;
+  final StatisticsController statisticsController;
 
   final ThemeMode themeMode;
 
   const _RootScreen({
     required this.audioController,
     required this.gameController,
+    required this.statisticsController,
     required this.themeMode,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = themeMode == ThemeMode.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -207,6 +220,22 @@ class _RootScreen extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () {
+              audioController.playClick();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => StatisticsPage(
+                    statisticsController: statisticsController,
+                    audioController: audioController,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.insert_chart_outlined_rounded),
+          ),
+          IconButton(
+            onPressed: () {
+              audioController.playClick();
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
