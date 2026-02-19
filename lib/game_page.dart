@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
-import 'models/game.dart';
 import 'models/types.dart';
 import 'widgets/game_over_dialog.dart';
 import 'widgets/guess_input.dart';
 import 'widgets/tile.dart';
 import 'widgets/top_toast.dart';
 import 'controllers/audio_controller.dart';
+import 'controllers/game_controller.dart';
+import 'models/word.dart';
 
 class GamePage extends StatefulWidget {
-  const GamePage({super.key, required this.audioController});
+  const GamePage({
+    super.key,
+    required this.audioController,
+    required this.gameController,
+  });
 
   final AudioController audioController;
+  final GameController gameController;
 
   @override
   State<GamePage> createState() => _GamePageState();
 }
 
-class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
-  final Game _game = Game(numAllowedGuesses: 6);
-
+class _GamePageState extends State<GamePage> {
   String? _errorMessage;
   bool _showError = false;
 
@@ -37,7 +41,6 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -45,127 +48,132 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addObserver(this);
-
-    widget.audioController.load().then((_) {
-      setState(() {});
-    });
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
-    super.didChangeAppLifecycleState(state);
-
-    if (state == AppLifecycleState.paused) {
-      await widget.audioController.pauseBackground();
-    } else if (state == AppLifecycleState.resumed) {
-      await widget.audioController.resumeBackground();
-    }
+    widget.audioController.load();
   }
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
+    final topInset = media.padding.top; // статусбар
+    final appBarHeight = kToolbarHeight;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    final maxHeight = media.size.height - topInset - appBarHeight - 16;
+
+    final isKeyboardOpen = bottomInset > 0;
 
     return Stack(
       children: [
         AnimatedPadding(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCirc,
-          padding: EdgeInsets.only(bottom: bottomInset),
-          child: Padding(
-            padding: const EdgeInsets.only(right: 8.0, left: 8.0),
-            child: Align(
-              alignment: Alignment.center,
+          padding: EdgeInsets.only(bottom: bottomInset, top: topInset + 8, left: 8, right: 8),
+          child: Align(
+            alignment: Alignment.center,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  color: theme.cardColor.withValues(
-                    alpha: 0.9,
-                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  color: theme.cardColor.withValues(alpha: 0.9),
                   boxShadow: [
                     BoxShadow(
                       color: isDark
                           ? Colors.black.withValues(alpha: .3)
-                          : Colors.deepPurple.withValues(alpha: .15),
+                          : theme.colorScheme.primary.withValues(alpha: .1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Column(
-                      spacing: 5.0,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (var guess in _game.guesses)
-                          Row(
+                child: SingleChildScrollView(
+                  reverse: isKeyboardOpen,
+                  physics: const ClampingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ValueListenableBuilder<List<Word>>(
+                        valueListenable: widget.gameController.guessesNotifier,
+                        builder: (context, guesses, _) {
+                          return Column(
                             spacing: 5.0,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              for (int i = 0; i < guess.length; i++)
-                                FutureBuilder(
-                                  future: Future.delayed(
-                                    Duration(milliseconds: 120 * i),
-                                    () {
-                                      return Tile(guess[i].char, guess[i].type);
-                                    },
-                                  ),
-                                  builder: (context, snapshot) {
-                                    if (!snapshot.hasData)
-                                      return Tile(guess[i].char, HitType.none);
-                                    return snapshot.data!;
-                                  },
+                              for (var guess in guesses)
+                                Row(
+                                  spacing: 5.0,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    for (int i = 0; i < guess.length; i++)
+                                      FutureBuilder(
+                                        future: Future.delayed(
+                                          Duration(milliseconds: 120 * i),
+                                          () {
+                                            return Tile(
+                                              guess[i].char,
+                                              guess[i].type,
+                                            );
+                                          },
+                                        ),
+                                        builder: (context, snapshot) {
+                                          if (!snapshot.hasData)
+                                            return Tile(
+                                              guess[i].char,
+                                              HitType.none,
+                                            );
+                                          return snapshot.data!;
+                                        },
+                                      ),
+                                  ],
                                 ),
                             ],
-                          ),
-                      ],
-                    ),
-                    GuessInput(
-                      audioController: widget.audioController,
-                      onRestart: () => setState(() {
-                        _game.resetGame();
-                      }),
-                      onSubmitGuess: (String guess) {
-                        final result = _game.guess(guess);
-                        if (result.error != null) {
-                          _showTopError(result.error!);
-                          return;
-                        }
-
-                        setState(() {});
-
-                        if (_game.didWin || _game.didLose) {
-                          if (_game.didWin) {
-                            widget.audioController.playWin();
-                          } else {
-                            widget.audioController.playLose();
+                          );
+                        },
+                      ),
+                      GuessInput(
+                        audioController: widget.audioController,
+                        onRestart: () {
+                          widget.gameController.resetGame();
+                        },
+                        onSubmitGuess: (String guess) {
+                          final result = widget.gameController.submitGuess(
+                            guess,
+                          );
+                          if (result.error != null) {
+                            _showTopError(result.error!);
+                            return;
                           }
 
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) => GameOverDialog(
-                              audioController: widget.audioController,
-                              didWin: _game.didWin,
-                              wordToGuess: _game.hiddenWord,
-                              onPlayAgain: () {
-                                setState(() {
-                                  _game.resetGame();
-                                });
-                              },
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ],
+                          if (widget.gameController.didWin ||
+                              widget.gameController.didLose) {
+                            if (widget.gameController.didWin) {
+                              widget.audioController.playWin();
+                            } else {
+                              widget.audioController.playLose();
+                            }
+
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => GameOverDialog(
+                                audioController: widget.audioController,
+                                didWin: widget.gameController.didWin,
+                                wordToGuess: widget.gameController.hiddenWord,
+                                onPlayAgain: () {
+                                  widget.gameController.resetGame();
+                                },
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -175,7 +183,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
           AnimatedPositioned(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOut,
-            top: _showError ? 50 : -100,
+            top: _showError ? 100 : -80,
             left: 20,
             right: 20,
             child: AnimatedOpacity(

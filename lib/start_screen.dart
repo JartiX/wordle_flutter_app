@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'controllers/audio_controller.dart';
+import 'controllers/game_controller.dart';
 import 'game_page.dart';
 
 class StartScreen extends StatefulWidget {
   final AudioController audioController;
+  final GameController gameController;
 
-  const StartScreen({super.key, required this.audioController});
+  const StartScreen({
+    super.key,
+    required this.audioController,
+    required this.gameController,
+  });
 
   @override
   State<StartScreen> createState() => _StartScreenState();
@@ -33,7 +39,7 @@ class _StartScreenState extends State<StartScreen> {
       _gameStarted = true;
     });
 
-    widget.audioController.playBackground();
+    widget.audioController.load();
   }
 
   @override
@@ -55,6 +61,7 @@ class _StartScreenState extends State<StartScreen> {
           ? GamePage(
               key: const ValueKey("game"),
               audioController: widget.audioController,
+              gameController: widget.gameController,
             )
           : Container(
               key: const ValueKey("start"),
