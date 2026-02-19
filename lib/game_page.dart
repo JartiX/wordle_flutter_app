@@ -7,6 +7,7 @@ import 'widgets/top_toast.dart';
 import 'controllers/audio_controller.dart';
 import 'controllers/game_controller.dart';
 import 'models/word.dart';
+import 'events/game_events.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({
@@ -39,16 +40,48 @@ class _GamePageState extends State<GamePage> {
     });
   }
 
+  void _showGameOverDialog(bool didWin) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => GameOverDialog(
+        audioController: widget.audioController,
+        didWin: didWin,
+        wordToGuess: widget.gameController.hiddenWord,
+        onPlayAgain: () => widget.gameController.resetGame(),
+      ),
+    );
+  }
+
   @override
   void dispose() {
+    widget.gameController.gameEvent.removeListener(_handleGameEvent);
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
+    widget.gameController.gameEvent.addListener(_handleGameEvent);
 
     widget.audioController.load();
+  }
+
+  void _handleGameEvent() {
+    final event = widget.gameController.gameEvent.value;
+    if (event == null) return;
+
+    if (event.error != null) {
+      _showTopError(event.error!);
+    } else if (event.status == GameStatus.won) {
+      widget.audioController.playWin();
+      _showGameOverDialog(true);
+    } else if (event.status == GameStatus.lost) {
+      widget.audioController.playLose();
+      _showGameOverDialog(false);
+    }
+
+    widget.gameController.gameEvent.value = null;
   }
 
   @override
@@ -69,14 +102,24 @@ class _GamePageState extends State<GamePage> {
         AnimatedPadding(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCirc,
-          padding: EdgeInsets.only(bottom: bottomInset, top: topInset + 8, left: 8, right: 8),
+          padding: EdgeInsets.only(
+            bottom: bottomInset,
+            top: topInset + 8,
+            left: 8,
+            right: 8,
+          ),
           child: Align(
             alignment: Alignment.center,
             child: ConstrainedBox(
               constraints: BoxConstraints(maxHeight: maxHeight),
 
               child: Container(
-                padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+                padding: const EdgeInsets.only(
+                  left: 8,
+                  right: 8,
+                  top: 4,
+                  bottom: 4,
+                ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   color: theme.cardColor.withValues(alpha: 0.9),
@@ -140,37 +183,8 @@ class _GamePageState extends State<GamePage> {
                         onRestart: () {
                           widget.gameController.resetGame();
                         },
-                        onSubmitGuess: (String guess) {
-                          final result = widget.gameController.submitGuess(
-                            guess,
-                          );
-                          if (result.error != null) {
-                            _showTopError(result.error!);
-                            return;
-                          }
-
-                          if (widget.gameController.didWin ||
-                              widget.gameController.didLose) {
-                            if (widget.gameController.didWin) {
-                              widget.audioController.playWin();
-                            } else {
-                              widget.audioController.playLose();
-                            }
-
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (context) => GameOverDialog(
-                                audioController: widget.audioController,
-                                didWin: widget.gameController.didWin,
-                                wordToGuess: widget.gameController.hiddenWord,
-                                onPlayAgain: () {
-                                  widget.gameController.resetGame();
-                                },
-                              ),
-                            );
-                          }
-                        },
+                        onSubmitGuess: (guess) =>
+                            widget.gameController.submitGuess(guess),
                       ),
                     ],
                   ),
@@ -179,6 +193,7 @@ class _GamePageState extends State<GamePage> {
             ),
           ),
         ),
+
         if (_errorMessage != null)
           AnimatedPositioned(
             duration: const Duration(milliseconds: 400),
