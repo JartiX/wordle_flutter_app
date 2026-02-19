@@ -10,6 +10,7 @@ class AudioController {
   AudioController(this._audioService, this._settings);
 
   void init() {
+    _audioService.init();
     _audioService.setVolume(_settings.volume.value);
 
     _settings.musicEnabled.addListener(_handleMusicToggle);
