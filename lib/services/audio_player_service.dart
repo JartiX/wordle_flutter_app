@@ -22,8 +22,10 @@ class AudioPlayerService {
     if (_backgroundPlayer.playing) return;
 
     final targetVolume = _backgroundPlayer.volume;
-    await _backgroundPlayer.setVolume(1);
-    await _backgroundPlayer.play();
+    await _backgroundPlayer.setVolume(0.01);
+    _backgroundPlayer.play();
+
+    await Future.delayed(const Duration(milliseconds: 50));
 
     for (int i = 1; i <= steps; i++) {
       final v = targetVolume * i / steps;
