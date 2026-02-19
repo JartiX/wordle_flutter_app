@@ -80,7 +80,13 @@ class SettingsWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Звуки'),
-                Switch(value: enabled, onChanged: (v) => settings.toggleSfx()),
+                Switch(
+                  value: enabled,
+                  onChanged: (v) {
+                    settings.toggleSfx();
+                    audioController.playPop();
+                  },
+                ),
               ],
             ),
           ),
@@ -99,7 +105,10 @@ class SettingsWidget extends StatelessWidget {
                 Text('Музыка'),
                 Switch(
                   value: enabled,
-                  onChanged: (v) => settings.toggleMusic(),
+                  onChanged: (v) {
+                    settings.toggleMusic();
+                    audioController.playPop();
+                  },
                 ),
               ],
             ),
@@ -162,6 +171,7 @@ class SettingsWidget extends StatelessWidget {
                           child: IconButton(
                             onPressed: () {
                               settings.setTheme(option);
+                              audioController.playPop();
                             },
                             icon: Icon(icon, color: fill),
                           ),
@@ -181,9 +191,12 @@ class SettingsWidget extends StatelessWidget {
           ),
 
           const SizedBox(height: 16),
-          
+
           ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              Navigator.of(context).pop();
+              audioController.playPop();
+            },
             child: const Text('Закрыть'),
           ),
         ],

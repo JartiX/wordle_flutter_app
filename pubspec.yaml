@@ -74,6 +74,7 @@ flutter:
     - assets/sounds/send.mp3
     - assets/sounds/win.mp3
     - assets/sounds/lose.mp3
+    - assets/sounds/pop.mp3
     - assets/legal_words.txt
     - assets/legal_guesses.txt
 

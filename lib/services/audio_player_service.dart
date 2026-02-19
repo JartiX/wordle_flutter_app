@@ -5,6 +5,8 @@ class AudioPlayerService {
   static final AudioPlayerService _instance = AudioPlayerService._internal();
 
   final AudioPlayer _backgroundPlayer = AudioPlayer();
+  final AudioPlayer _effectPlayer = AudioPlayer();
+  bool _effectPlaying = false;
 
   AudioPlayerService._internal();
 
@@ -21,23 +23,26 @@ class AudioPlayerService {
   }) async {
     if (_backgroundPlayer.playing) return;
 
-    final targetVolume = _backgroundPlayer.volume;
-    await _backgroundPlayer.setVolume(0.01);
-    _backgroundPlayer.play();
+    try {
+      final targetVolume = _backgroundPlayer.volume;
+      await _backgroundPlayer.setVolume(0.01);
+      _backgroundPlayer.play();
 
-    await Future.delayed(const Duration(milliseconds: 50));
+      await Future.delayed(const Duration(milliseconds: 50));
 
-    for (int i = 1; i <= steps; i++) {
-      final v = targetVolume * i / steps;
-      await _backgroundPlayer.setVolume(v);
-      await Future.delayed(stepDuration);
-    }
+      for (int i = 1; i <= steps; i++) {
+        final v = targetVolume * i / steps;
+        await _backgroundPlayer.setVolume(v);
+        await Future.delayed(stepDuration);
+      }
 
-    await _backgroundPlayer.setVolume(targetVolume);
+      await _backgroundPlayer.setVolume(targetVolume);
+    } catch (_) {}
   }
 
   Future<void> setVolume(double volume) async {
     await _backgroundPlayer.setVolume(volume);
+    await _effectPlayer.setVolume(volume);
   }
 
   Future<void> pauseBackground() async {
@@ -64,23 +69,31 @@ class AudioPlayerService {
   }
 
   Future<void> _playEffect(String asset) async {
-    final player = AudioPlayer();
-    await player.setVolume(_backgroundPlayer.volume);
-    await player.setAsset(asset);
-    await player.play();
-
-    player.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed ||
-          state.processingState == ProcessingState.idle) {
-        player.dispose();
+    try {
+      if (_effectPlaying) {
+        await _effectPlayer.stop();
       }
-    });
+      _effectPlaying = true;
+      await _effectPlayer.setAsset(asset);
+
+      await _effectPlayer.play();
+
+      _effectPlayer.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed ||
+            state.processingState == ProcessingState.idle) {
+          _effectPlaying = false;
+        }
+      });
+    } catch (_) {
+      _effectPlaying = false;
+    }
   }
 
   Future<void> playClick() async => _playEffect(Assets.clickSound);
   Future<void> playSend() async => _playEffect(Assets.sendSound);
   Future<void> playWin() async => _playEffect(Assets.winSound);
   Future<void> playLose() async => _playEffect(Assets.loseSound);
+  Future<void> playPop() async => _playEffect(Assets.popSound);
 
   Future<void> dispose() async {
     await _backgroundPlayer.dispose();
