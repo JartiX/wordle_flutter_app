@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'models/types.dart';
 import 'widgets/game_over_dialog.dart';
@@ -90,7 +92,6 @@ class _GamePageState extends State<GamePage> {
     final topInset = media.padding.top; // статусбар
     final appBarHeight = kToolbarHeight;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final maxHeight = media.size.height - topInset - appBarHeight - 16;
 
@@ -124,9 +125,7 @@ class _GamePageState extends State<GamePage> {
                   color: theme.cardColor.withValues(alpha: 0.9),
                   boxShadow: [
                     BoxShadow(
-                      color: isDark
-                          ? Colors.black.withValues(alpha: .3)
-                          : theme.colorScheme.primary.withValues(alpha: .1),
+                      color: theme.colorScheme.onPrimary.withValues(alpha: .1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -142,6 +141,36 @@ class _GamePageState extends State<GamePage> {
                       ValueListenableBuilder<List<Word>>(
                         valueListenable: widget.gameController.guessesNotifier,
                         builder: (context, guesses, _) {
+                          final screenWidth = media.size.width;
+                          final screenHeight = maxHeight;
+                          const spacing = 5.0;
+                          const horizontalPadding = 32.0;
+                          const verticalPadding = 16.0;
+
+                          final lettersCount =
+                              widget.gameController.getWordLength;
+                          final rowsCount =
+                              widget.gameController.getNumAllowedGuesses;
+
+                          final availableWidth =
+                              screenWidth - horizontalPadding;
+                          final tileWidth =
+                              (availableWidth - spacing * (lettersCount - 1)) /
+                              lettersCount;
+
+                          const guessInputApproxHeight = 120.0;
+
+                          final availableHeight =
+                              screenHeight -
+                              guessInputApproxHeight -
+                              verticalPadding;
+
+                          final tileHeight =
+                              (availableHeight - spacing * (rowsCount - 1)) /
+                              rowsCount;
+
+                          final tileSize = min(tileWidth, tileHeight);
+
                           return Column(
                             spacing: 5.0,
                             mainAxisSize: MainAxisSize.min,
@@ -159,6 +188,7 @@ class _GamePageState extends State<GamePage> {
                                             return Tile(
                                               guess[i].char,
                                               guess[i].type,
+                                              size: tileSize,
                                             );
                                           },
                                         ),
@@ -167,6 +197,7 @@ class _GamePageState extends State<GamePage> {
                                             return Tile(
                                               guess[i].char,
                                               HitType.none,
+                                              size: tileSize,
                                             );
                                           return snapshot.data!;
                                         },

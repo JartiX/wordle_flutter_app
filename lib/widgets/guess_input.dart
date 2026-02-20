@@ -11,7 +11,7 @@ class GuessInput extends StatefulWidget {
     required this.onSubmitGuess,
     required this.onRestart,
     required this.audioController,
-    required this.gameController
+    required this.gameController,
   });
 
   final void Function(String) onSubmitGuess;
@@ -40,7 +40,9 @@ class _GuessInputState extends State<GuessInput> {
 
     _textEditingController.addListener(() {
       setState(() {
-        isSubmitEnabled = widget.gameController.isRightLength(_textEditingController.text.trim());
+        isSubmitEnabled = widget.gameController.isRightLength(
+          _textEditingController.text.trim(),
+        );
       });
     });
   }
@@ -58,6 +60,9 @@ class _GuessInputState extends State<GuessInput> {
     final isDark = theme.brightness == Brightness.dark;
     final isFocused = _focusNode.hasFocus;
 
+    final width = MediaQuery.of(context).size.width;
+    final scale = (width / 400).clamp(0.75, 1.2);
+
     final backgroundColor = theme.colorScheme.surfaceBright;
     final boxShadowColor = theme.colorScheme.outline.withValues(alpha: 0.1);
     final gradientFocused = LinearGradient(
@@ -68,19 +73,25 @@ class _GuessInputState extends State<GuessInput> {
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: 12 * scale,
+        vertical: 8 * scale,
+      ),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: 12 * scale,
+          vertical: 8 * scale,
+        ),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30 * scale),
           color: backgroundColor.withValues(alpha: .9),
           boxShadow: [
             BoxShadow(
               color: boxShadowColor,
-              blurRadius: 12,
-              offset: const Offset(0, 6),
+              blurRadius: 12 * scale,
+              offset: Offset(0, 6 * scale),
             ),
           ],
         ),
@@ -90,13 +101,13 @@ class _GuessInputState extends State<GuessInput> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(25 * scale),
                   gradient: isFocused ? gradientFocused : null,
                 ),
                 padding: const EdgeInsets.all(2),
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(23),
+                    borderRadius: BorderRadius.circular(23 * scale),
                     color: backgroundColor,
                   ),
                   child: TextField(
@@ -105,11 +116,12 @@ class _GuessInputState extends State<GuessInput> {
                     ],
                     focusNode: _focusNode,
                     controller: _textEditingController,
-                    maxLength: 5,
+                    maxLength: widget.gameController.getWordLength,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleMedium?.copyWith(
+                      fontSize: 18 * scale,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 4,
+                      letterSpacing: 4 * scale,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                     decoration: InputDecoration(
@@ -118,9 +130,7 @@ class _GuessInputState extends State<GuessInput> {
                       hintText: "ВВЕДИТЕ СЛОВО",
                       hintStyle: TextStyle(
                         color: isDark ? Colors.white54 : Colors.black38,
-                        fontSize: MediaQuery.of(context).size.width < 400
-                            ? 10
-                            : 16,
+                        fontSize: 14 * scale,
                       ),
                     ),
                     onChanged: (_) => setState(() {}),
@@ -142,7 +152,7 @@ class _GuessInputState extends State<GuessInput> {
               ),
             ),
 
-            const SizedBox(width: 10),
+            SizedBox(width: 10 * scale),
 
             AnimatedRestartButton(
               audioController: widget.audioController,
@@ -152,7 +162,7 @@ class _GuessInputState extends State<GuessInput> {
               },
             ),
 
-            const SizedBox(width: 8),
+            SizedBox(width: 8 * scale),
 
             AnimatedOpacity(
               duration: const Duration(milliseconds: 200),

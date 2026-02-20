@@ -65,50 +65,59 @@ class _AttemptsBarChartState extends State<AttemptsBarChart>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, _) {
-        return SizedBox(
-          height: widget.maxHeight + 48,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: widget.winsByAttempts.entries.map((entry) {
-              final attempts = entry.key;
-              final wins = entry.value;
-              final double fraction = _maxWins == 0
-                  ? 0
-                  : (wins / _maxWins) * _animation.value;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: widget.winsByAttempts.entries.map((entry) {
+            final attempts = entry.key;
+            final wins = entry.value;
+            final double fraction = _maxWins == 0
+                ? 0
+                : (wins / _maxWins) * _animation.value;
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(wins != 0 ? wins.toString() : " ", style: widget.textTheme.bodyMedium),
-                  const SizedBox(height: 4),
-                  Container(
-                    height: widget.maxHeight,
-                    width: 28,
-                    alignment: Alignment.bottomCenter,
-                    child: FractionallySizedBox(
-                      heightFactor: fraction,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              widget.colorScheme.primaryContainer,
-                              widget.colorScheme.primary,
-                            ],
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Text(
+                    wins != 0 ? wins.toString() : " ",
+                    style: widget.textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  height: widget.maxHeight,
+                  width: 28,
+                  alignment: Alignment.bottomCenter,
+                  child: FractionallySizedBox(
+                    heightFactor: fraction,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            widget.colorScheme.primaryContainer,
+                            widget.colorScheme.primary,
+                          ],
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
                         ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(attempts.toString(), style: widget.textTheme.bodyMedium),
-                ],
-              );
-            }).toList(),
-          ),
+                ),
+                const SizedBox(height: 4),
+                Flexible(
+                  child: Text(
+                    attempts.toString(),
+                    style: widget.textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
         );
       },
     );
