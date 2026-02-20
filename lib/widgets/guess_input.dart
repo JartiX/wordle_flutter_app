@@ -116,7 +116,7 @@ class _GuessInputState extends State<GuessInput> {
                     ],
                     focusNode: _focusNode,
                     controller: _textEditingController,
-                    maxLength: widget.gameController.getWordLength,
+                    maxLength: widget.gameController.wordLength,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontSize: 18 * scale,

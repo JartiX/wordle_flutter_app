@@ -41,6 +41,44 @@ class _GamePageState extends State<GamePage> {
     });
   }
 
+  Widget _buildCell(
+    int rowIndex,
+    int colIndex,
+    List<Word> guesses,
+    double tileSize,
+  ) {
+    if (rowIndex < widget.gameController.activeIndex) {
+      final char = guesses[rowIndex][colIndex].char;
+      final type = guesses[rowIndex][colIndex].type;
+
+      return FutureBuilder(
+        key: ValueKey('row_${rowIndex}_col_$colIndex'),
+        future: Future.delayed(
+          Duration(milliseconds: 120 * colIndex),
+          () => type,
+        ),
+        builder: (context, snapshot) {
+          return Tile(
+            snapshot.hasData ? char : '',
+            snapshot.hasData ? snapshot.data! : HitType.none,
+            size: tileSize,
+          );
+        },
+      );
+    }
+
+    if (rowIndex == widget.gameController.activeIndex) {
+      final hint = widget.gameController.hintLetters[colIndex];
+
+      if (hint != null) {
+        return Tile(hint.char, HitType.none, size: tileSize, needOpacity: true,);
+      }
+    }
+
+    // 3. ПУСТЫЕ КЛЕТКИ (будущие ходы)
+    return Tile('', HitType.none, size: tileSize);
+  }
+
   void _showGameOverDialog(bool didWin) {
     showDialog(
       context: context,
@@ -147,10 +185,9 @@ class _GamePageState extends State<GamePage> {
                           const horizontalPadding = 32.0;
                           const verticalPadding = 16.0;
 
-                          final lettersCount =
-                              widget.gameController.getWordLength;
+                          final lettersCount = widget.gameController.wordLength;
                           final rowsCount =
-                              widget.gameController.getNumAllowedGuesses;
+                              widget.gameController.numAllowedGuesses;
 
                           final availableWidth =
                               screenWidth - horizontalPadding;
@@ -175,32 +212,25 @@ class _GamePageState extends State<GamePage> {
                             spacing: 5.0,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              for (var guess in guesses)
+                              for (
+                                int rowIndex = 0;
+                                rowIndex < rowsCount;
+                                rowIndex++
+                              )
                                 Row(
                                   spacing: 5.0,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    for (int i = 0; i < guess.length; i++)
-                                      FutureBuilder(
-                                        future: Future.delayed(
-                                          Duration(milliseconds: 120 * i),
-                                          () {
-                                            return Tile(
-                                              guess[i].char,
-                                              guess[i].type,
-                                              size: tileSize,
-                                            );
-                                          },
-                                        ),
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData)
-                                            return Tile(
-                                              guess[i].char,
-                                              HitType.none,
-                                              size: tileSize,
-                                            );
-                                          return snapshot.data!;
-                                        },
+                                    for (
+                                      int colIndex = 0;
+                                      colIndex < lettersCount;
+                                      colIndex++
+                                    )
+                                      _buildCell(
+                                        rowIndex,
+                                        colIndex,
+                                        guesses,
+                                        tileSize,
                                       ),
                                   ],
                                 ),
