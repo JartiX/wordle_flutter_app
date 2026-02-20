@@ -10,7 +10,8 @@ class SettingsService {
         !prefs.containsKey(PrefKeys.sfxEnabled) ||
         !prefs.containsKey(PrefKeys.musicEnabled) ||
         !prefs.containsKey(PrefKeys.volume) ||
-        !prefs.containsKey(PrefKeys.theme)) {
+        !prefs.containsKey(PrefKeys.theme) ||
+        !prefs.containsKey(PrefKeys.wordLength)) {
       return SettingsModel.defaults();
     }
 
@@ -20,6 +21,7 @@ class SettingsService {
       musicEnabled: prefs.getBool(PrefKeys.musicEnabled)!,
       volume: prefs.getDouble(PrefKeys.volume)!,
       theme: prefs.getString(PrefKeys.theme)!,
+      wordLength: prefs.getInt(PrefKeys.wordLength)!,
     );
   }
 
@@ -31,6 +33,7 @@ class SettingsService {
     await prefs.setBool(PrefKeys.musicEnabled, settings.musicEnabled);
     await prefs.setDouble(PrefKeys.volume, settings.volume);
     await prefs.setString(PrefKeys.theme, settings.theme);
+    await prefs.setInt(PrefKeys.wordLength, settings.wordLength);
   }
 
   Future<void> reset() async {

@@ -11,12 +11,19 @@ class GuessResult {
 }
 
 class Game {
-  Game({this.numAllowedGuesses = defaultNumGuesses, this.seed}) {
-    _wordToGuess = seed == null ? Word.random() : Word.fromSeed(seed!);
-    _guesses = List<Word>.filled(numAllowedGuesses, Word.empty());
+  Game({
+    this.numAllowedGuesses = defaultNumGuesses,
+    this.wordLength = defaultWordLength,
+    this.seed,
+  }) {
+    _wordToGuess = seed == null
+        ? Word.random(wordLength)
+        : Word.fromSeed(seed!, wordLength);
+    _guesses = List.generate(numAllowedGuesses, (_) => Word.empty(wordLength));
   }
 
   late final int numAllowedGuesses;
+  late final int wordLength;
   late List<Word> _guesses;
   late Word _wordToGuess;
   int? seed;
@@ -27,7 +34,7 @@ class Game {
 
   Word get previousGuess {
     final index = _guesses.lastIndexWhere((word) => word.isNotEmpty);
-    return index == -1 ? Word.empty() : _guesses[index];
+    return index == -1 ? Word.empty(wordLength) : _guesses[index];
   }
 
   int get activeIndex {
@@ -40,17 +47,19 @@ class Game {
   }
 
   void resetGame() {
-    _wordToGuess = seed == null ? Word.random() : Word.fromSeed(seed!);
-    _guesses = List.filled(numAllowedGuesses, Word.empty());
+    _wordToGuess = seed == null
+        ? Word.random(wordLength)
+        : Word.fromSeed(seed!, wordLength);
+    _guesses = List.generate(numAllowedGuesses, (_) => Word.empty(wordLength));
   }
 
   GuessResult guess(String guess) {
-  if (guess.length != hiddenWord.length) {
-    return GuessResult(error: "Слово должно быть ${hiddenWord.length} букв");
-  }
-  if (!isLegalGuess(guess)) {
-    return GuessResult(error: "Слово отсутствует в словаре");
-  }
+    if (guess.length != wordLength) {
+      return GuessResult(error: "Слово должно быть ${hiddenWord.length} букв");
+    }
+    if (!isLegalGuess(guess)) {
+      return GuessResult(error: "Слово отсутствует в словаре");
+    }
 
     final result = matchGuessOnly(guess);
     addGuessToList(result);

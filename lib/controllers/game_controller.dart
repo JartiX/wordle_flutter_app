@@ -5,6 +5,7 @@ import '../models/game.dart';
 import '../models/word.dart';
 import '../models/types.dart';
 import '../events/game_events.dart';
+import '../repositories/word_repository.dart';
 
 class GameController {
   final SettingsController _settings;
@@ -16,28 +17,29 @@ class GameController {
   StatisticsController get statisticsController => _statisticsController;
 
   late Game _game;
-
+  bool _isReady = false;
+  bool get isReady => _isReady;
   Game get game => _game;
 
   bool get didWin => _game.didWin;
   bool get didLose => _game.didLose;
   Word get hiddenWord => _game.hiddenWord;
 
-  int get getWordLength => wordLength;
+  int get getWordLength => _game.wordLength;
   int get getNumAllowedGuesses => _game.numAllowedGuesses;
 
-  bool isRightLength(String guess) => guess.length == wordLength;
+  bool isRightLength(String guess) =>
+      guess.length == _settings.wordLength.value;
 
   final ValueNotifier<List<Word>> guessesNotifier = ValueNotifier<List<Word>>(
     [],
   );
 
-  void init() {
-    _createGame();
+  void init() async {
+    await _createGame(); // Ждем создания первой игры
 
-    _settings.attempts.addListener(() {
-      _createGame();
-    });
+    _settings.attempts.addListener(_createGame);
+    _settings.wordLength.addListener(_createGame);
   }
 
   GameController(this._settings, this._statisticsController);
@@ -55,7 +57,10 @@ class GameController {
       );
     } else if (_game.didWin) {
       gameEvent.value = GameEvent(status: GameStatus.won);
-      _statisticsController.recordGame(won: true, attempts: _game.numAllowedGuesses);
+      _statisticsController.recordGame(
+        won: true,
+        attempts: _game.numAllowedGuesses,
+      );
     } else if (_game.didLose) {
       gameEvent.value = GameEvent(status: GameStatus.lost);
       _statisticsController.recordGame(won: false);
@@ -64,9 +69,13 @@ class GameController {
     return result;
   }
 
-  void _createGame() {
-    _game = Game(numAllowedGuesses: _settings.attempts.value);
+  Future<void> _createGame() async {
+    final len = _settings.wordLength.value;
+    await WordRepository(len).load();
+
+    _game = Game(numAllowedGuesses: _settings.attempts.value, wordLength: len);
     guessesNotifier.value = List<Word>.from(_game.guesses);
+    _isReady = true;
   }
 
   void resetGame() {

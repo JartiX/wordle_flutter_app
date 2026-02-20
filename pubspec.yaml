@@ -75,8 +75,10 @@ flutter:
     - assets/sounds/win.mp3
     - assets/sounds/lose.mp3
     - assets/sounds/pop.mp3
-    - assets/legal_words.txt
-    - assets/legal_guesses.txt
+    - assets/legal_words5.txt
+    - assets/legal_words6.txt
+    - assets/legal_words7.txt
+    - assets/legal_words8.txt
 
   # To add assets to your application, add an assets section, like this:
   # assets:

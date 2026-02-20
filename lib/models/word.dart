@@ -4,43 +4,50 @@ import 'types.dart';
 import '../repositories/word_repository.dart';
 
 class Word with IterableMixin<Letter> {
-  Word(this._letters);
-  static final WordRepository _repository = WordRepository();
+  Word(this._letters, this._wordLength);
 
-  factory Word.empty() {
-    return Word(List.filled(wordLength, (char: '', type: HitType.none)));
+  final List<Letter> _letters;
+  final int _wordLength;
+
+  static WordRepository repository(int length) => WordRepository(length);
+
+  factory Word.empty(int length) {
+    return Word(
+      List.generate(length, (_) => Letter(char: '', type: HitType.none)),
+      length,
+    );
   }
 
   factory Word.fromString(String guess) {
     var list = guess.toUpperCase().split('');
     var letters = list
-        .map((String char) => (char: char, type: HitType.none))
+        .map((String char) => Letter(char: char, type: HitType.none))
         .toList();
-    return Word(letters);
+    return Word(letters, letters.length);
   }
 
-  factory Word.random() {
+  factory Word.random(int length) {
     var rand = Random();
-    var nextWord = _repository.legalWords[rand.nextInt(_repository.legalWords.length)];
+    var repo = repository(length);
+    var nextWord = repo.legalWords[rand.nextInt(repo.legalWords.length)];
     return Word.fromString(nextWord);
   }
 
-  factory Word.fromSeed(int seed) {
-    return Word.fromString(_repository.legalWords[seed % _repository.legalWords.length]);
+  factory Word.fromSeed(int seed, int length) {
+    var repo = repository(length);
+    return Word.fromString(
+      repo.legalWords[seed % repo.legalWords.length],
+    );
   }
 
-  final List<Letter> _letters;
-
   List<Letter> get letters => _letters;
+  int get wordLength => _wordLength;
 
   @override
   Iterator<Letter> get iterator => _letters.iterator;
 
   @override
-  bool get isEmpty {
-    return every((letter) => letter.char.isEmpty);
-  }
-
+  bool get isEmpty => every((letter) => letter.char.isEmpty);
   @override
   bool get isNotEmpty => !isEmpty;
 
@@ -48,11 +55,6 @@ class Word with IterableMixin<Letter> {
   operator []=(int i, Letter value) => _letters[i] = value;
 
   @override
-  String toString() {
-    return _letters.map((Letter c) => c.char).join().trim();
-  }
-
-  String toStringVerbose() {
-    return _letters.map((l) => '${l.char} - ${l.type.name}').join('\n');
-  }
+  String toString() => _letters.map((l) => l.char).join();
+  String toStringVerbose() => _letters.map((l) => '${l.char} - ${l.type.name}').join('\n');
 }

@@ -68,6 +68,32 @@ class SettingsWidget extends StatelessWidget {
             },
           ),
 
+          ValueListenableBuilder(
+            valueListenable: settings.wordLength,
+            builder: (context, wordLength, _) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Длина слов:'),
+                  Expanded(
+                    child: Slider(
+                      min: SettingsModel.allowedWordLength[0].toDouble(),
+                      max: SettingsModel.allowedWordLength[1].toDouble(),
+                      divisions:
+                          SettingsModel.allowedWordLength[1] -
+                          SettingsModel.allowedWordLength[0],
+                      value: settings.wordLength.value.toDouble(),
+                      onChanged: (v) {
+                        settings.setWordLength(v.toInt());
+                      },
+                    ),
+                  ),
+                  Text('${settings.wordLength.value}'),
+                ],
+              );
+            },
+          ),
+
           Divider(
             height: 8,
             thickness: 1,
