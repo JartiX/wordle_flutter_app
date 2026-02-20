@@ -8,11 +8,24 @@ class SettingsController {
 
   late SettingsModel _settings;
 
-  late final ValueNotifier<int> attempts = ValueNotifier<int>(SettingsModel.defaults().attempts);
-  late final ValueNotifier<bool> sfxEnabled = ValueNotifier<bool>(SettingsModel.defaults().sfxEnabled);
-  late final ValueNotifier<bool> musicEnabled = ValueNotifier<bool>(SettingsModel.defaults().musicEnabled);
-  late final ValueNotifier<double> volume = ValueNotifier<double>(SettingsModel.defaults().volume);
-  late final ValueNotifier<String> theme = ValueNotifier<String>(SettingsModel.defaults().theme);
+  late final ValueNotifier<int> attempts = ValueNotifier<int>(
+    SettingsModel.defaults().attempts,
+  );
+  late final ValueNotifier<bool> sfxEnabled = ValueNotifier<bool>(
+    SettingsModel.defaults().sfxEnabled,
+  );
+  late final ValueNotifier<bool> musicEnabled = ValueNotifier<bool>(
+    SettingsModel.defaults().musicEnabled,
+  );
+  late final ValueNotifier<double> volume = ValueNotifier<double>(
+    SettingsModel.defaults().volume,
+  );
+  late final ValueNotifier<String> theme = ValueNotifier<String>(
+    SettingsModel.defaults().theme,
+  );
+  late final ValueNotifier<int> wordLength = ValueNotifier<int>(
+    SettingsModel.defaults().wordLength,
+  );
 
   SettingsController(this._service);
 
@@ -24,6 +37,7 @@ class SettingsController {
     musicEnabled.value = _settings.musicEnabled;
     volume.value = _settings.volume;
     theme.value = _settings.theme;
+    wordLength.value = _settings.wordLength;
   }
 
   Future<void> _save() async {
@@ -33,6 +47,7 @@ class SettingsController {
       musicEnabled: musicEnabled.value,
       volume: volume.value,
       theme: theme.value,
+      wordLength: wordLength.value,
     );
 
     await _service.save(_settings);
@@ -68,6 +83,11 @@ class SettingsController {
     await _save();
   }
 
+  Future<void> setWordLength(int value) async {
+    wordLength.value = value;
+    await _save();
+  }
+
   Future<void> reset() async {
     await _service.reset();
     await load();
@@ -79,5 +99,6 @@ class SettingsController {
     musicEnabled.dispose();
     volume.dispose();
     theme.dispose();
+    wordLength.dispose();
   }
 }
