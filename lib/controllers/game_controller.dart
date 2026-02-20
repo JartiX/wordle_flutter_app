@@ -23,6 +23,9 @@ class GameController {
   bool get didLose => _game.didLose;
   Word get hiddenWord => _game.hiddenWord;
 
+  int get getWordLength => wordLength;
+  int get getNumAllowedGuesses => _game.numAllowedGuesses;
+
   bool isRightLength(String guess) => guess.length == wordLength;
 
   final ValueNotifier<List<Word>> guessesNotifier = ValueNotifier<List<Word>>(

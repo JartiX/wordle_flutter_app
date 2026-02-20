@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import '../models/types.dart';
 
 class Tile extends StatefulWidget {
-  const Tile(this.letter, this.hitType, {super.key});
+  const Tile(this.letter, this.hitType, {super.key, required this.size});
 
   final String letter;
   final HitType hitType;
+  final double size;
 
   @override
   State<Tile> createState() => _TileState();
@@ -74,8 +75,8 @@ class _TileState extends State<Tile> {
       curve: Curves.easeInOut,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        width: 60,
-        height: 60,
+        width: widget.size,
+        height: widget.size,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: gradient,
@@ -97,6 +98,7 @@ class _TileState extends State<Tile> {
           child: Text(
             widget.letter.toUpperCase(),
             style: theme.textTheme.titleLarge?.copyWith(
+              fontSize: widget.size * 0.45,
               fontWeight: FontWeight.bold,
               color: widget.hitType == HitType.none
                   ? (isDark ? Colors.white70 : Colors.black87)
