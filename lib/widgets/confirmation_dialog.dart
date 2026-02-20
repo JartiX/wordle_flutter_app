@@ -89,6 +89,15 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog>
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final size = media.size;
+    final isSmallScreen = size.width < 360;
+    final isTablet = size.width > 600;
+
+    final horizontalPadding = isSmallScreen ? 16.0 : 24.0;
+    final verticalPadding = isSmallScreen ? 20.0 : 28.0;
+    final maxWidth = isTablet ? 420.0 : 500.0;
+
     return PopScope(
       onPopInvokedWithResult: (didPop, _) => _closeDialog(false),
       child: FadeTransition(
@@ -97,86 +106,117 @@ class _ConfirmationDialogState extends State<_ConfirmationDialog>
           scale: _scaleAnimation,
           child: Dialog(
             backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-              decoration: BoxDecoration(
-                color: widget.backgroundColor,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.primaryColor.withValues(alpha: .3),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 24,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: maxWidth,
+                maxHeight: size.height * 0.9,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: widget.textColor,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: verticalPadding,
+                ),
+                decoration: BoxDecoration(
+                  color: widget.backgroundColor,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: widget.primaryColor.withValues(alpha: .3),
+                      blurRadius: 20,
+                      spreadRadius: 2,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    widget.message,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: widget.textColor.withValues(alpha: .8),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            _closeDialog(false);
-                            widget.audioController.playPop();
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: widget.primaryColor,
-                            side: BorderSide(color: widget.primaryColor),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text("Отмена"),
+                      Text(
+                        widget.title,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 18 : 22,
+                          fontWeight: FontWeight.bold,
+                          color: widget.textColor,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            _closeDialog(true);
-                            widget.audioController.playPop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: widget.primaryColor,
-                            foregroundColor: widget.backgroundColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text("Сбросить"),
+                      const SizedBox(height: 12),
+                      Text(
+                        widget.message,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 14 : 16,
+                          color: widget.textColor.withValues(alpha: .8),
                         ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final useVertical =
+                              constraints.maxWidth < 300 || isSmallScreen;
+
+                          if (useVertical) {
+                            return Column(
+                              children: [
+                                _buildCancelButton(),
+                                const SizedBox(height: 12),
+                                _buildConfirmButton(),
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              Expanded(child: _buildCancelButton()),
+                              const SizedBox(width: 16),
+                              Expanded(child: _buildConfirmButton()),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCancelButton() {
+    return OutlinedButton(
+      onPressed: () {
+        _closeDialog(false);
+        widget.audioController.playPop();
+      },
+      style: OutlinedButton.styleFrom(
+        foregroundColor: widget.primaryColor,
+        side: BorderSide(color: widget.primaryColor),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      child: const Text("Отмена"),
+    );
+  }
+
+  Widget _buildConfirmButton() {
+    return ElevatedButton(
+      onPressed: () {
+        _closeDialog(true);
+        widget.audioController.playPop();
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: widget.primaryColor,
+        foregroundColor: widget.backgroundColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      child: const Text("Сбросить"),
     );
   }
 }

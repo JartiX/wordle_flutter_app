@@ -97,29 +97,6 @@ class _GamePageState extends State<GamePage> {
 
     final isKeyboardOpen = bottomInset > 0;
 
-    final screenWidth = media.size.width;
-    final screenHeight = maxHeight;
-    const spacing = 5.0;
-    const horizontalPadding = 32.0;
-    const verticalPadding = 16.0;
-
-    final lettersCount = widget.gameController.getWordLength;
-    final rowsCount = widget.gameController.getNumAllowedGuesses;
-
-    final availableWidth = screenWidth - horizontalPadding;
-    final tileWidth =
-    (availableWidth - spacing * (lettersCount - 1)) / lettersCount;
-
-    const guessInputApproxHeight = 120.0;
-
-    final availableHeight =
-    screenHeight - guessInputApproxHeight - verticalPadding;
-
-    final tileHeight =
-    (availableHeight - spacing * (rowsCount - 1)) / rowsCount;
-
-    final tileSize = min(tileWidth, tileHeight);
-
     return Stack(
       children: [
         AnimatedPadding(
@@ -164,6 +141,36 @@ class _GamePageState extends State<GamePage> {
                       ValueListenableBuilder<List<Word>>(
                         valueListenable: widget.gameController.guessesNotifier,
                         builder: (context, guesses, _) {
+                          final screenWidth = media.size.width;
+                          final screenHeight = maxHeight;
+                          const spacing = 5.0;
+                          const horizontalPadding = 32.0;
+                          const verticalPadding = 16.0;
+
+                          final lettersCount =
+                              widget.gameController.getWordLength;
+                          final rowsCount =
+                              widget.gameController.getNumAllowedGuesses;
+
+                          final availableWidth =
+                              screenWidth - horizontalPadding;
+                          final tileWidth =
+                              (availableWidth - spacing * (lettersCount - 1)) /
+                              lettersCount;
+
+                          const guessInputApproxHeight = 120.0;
+
+                          final availableHeight =
+                              screenHeight -
+                              guessInputApproxHeight -
+                              verticalPadding;
+
+                          final tileHeight =
+                              (availableHeight - spacing * (rowsCount - 1)) /
+                              rowsCount;
+
+                          final tileSize = min(tileWidth, tileHeight);
+
                           return Column(
                             spacing: 5.0,
                             mainAxisSize: MainAxisSize.min,

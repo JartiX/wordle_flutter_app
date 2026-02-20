@@ -67,6 +67,12 @@ class _GameOverDialogState extends State<GameOverDialog>
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final size = media.size;
+
+    final isSmallScreen = size.width < 360;
+    final isTablet = size.width > 600;
+
     final isWin = widget.didWin;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -82,7 +88,12 @@ class _GameOverDialogState extends State<GameOverDialog>
     final Color wordBackgroundColor = isDark
         ? Colors.grey.shade800
         : Colors.white;
+
     final Color wordTextColor = primaryColor;
+
+    final horizontalPadding = isSmallScreen ? 16.0 : 24.0;
+    final verticalPadding = isSmallScreen ? 20.0 : 28.0;
+    final maxWidth = isTablet ? 420.0 : 500.0;
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -90,84 +101,108 @@ class _GameOverDialogState extends State<GameOverDialog>
         scale: _scaleAnimation,
         child: Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withValues(alpha: .4),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ],
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: maxWidth,
+              maxHeight: size.height * 0.9,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  isWin ? "🎉 ТЫ ПОБЕДИЛ!" : "💀 ТЫ ПРОИГРАЛ!",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.5,
-                  ),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: verticalPadding,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-
-                const SizedBox(height: 16),
-
-                Text(
-                  "Загаданное слово было:",
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: .9),
-                    fontSize: 16,
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withValues(alpha: .4),
+                    blurRadius: 20,
+                    spreadRadius: 2,
                   ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: wordBackgroundColor,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    widget.wordToGuess.toString().toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: wordTextColor,
-                      letterSpacing: 3,
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isWin ? "🎉 ТЫ ПОБЕДИЛ!" : "💀 ТЫ ПРОИГРАЛ!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 20 : 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
                     ),
-                  ),
-                ),
 
-                const SizedBox(height: 24),
+                    const SizedBox(height: 16),
 
-                Container(
-                  decoration: BoxDecoration(
-                    color: wordBackgroundColor,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: AnimatedRestartButton(
-                    onPressed: _closeDialog,
-                    isEnabled: true,
-                    audioController: widget.audioController,
-                  ),
+                    Text(
+                      "Загаданное слово было:",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: .9),
+                        fontSize: isSmallScreen ? 14 : 16,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: wordBackgroundColor,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          widget.wordToGuess.toString().toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 18 : 22,
+                            fontWeight: FontWeight.bold,
+                            color: wordTextColor,
+                            letterSpacing: 3,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+  width: double.infinity,
+  child: Material(
+    color: wordBackgroundColor,
+    borderRadius: BorderRadius.circular(24),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: _closeDialog,
+      child: AnimatedRestartButton(
+        onPressed: _closeDialog,
+        isEnabled: true,
+        audioController: widget.audioController,
+      ),
+    ),
+  ),
+),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

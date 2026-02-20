@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../controllers/statistics_controller.dart';
 import '../controllers/audio_controller.dart';
@@ -14,11 +16,13 @@ class StatisticsPage extends StatelessWidget {
     required this.audioController,
   });
 
-  Widget _statRow(BuildContext context, String title, String value) {
+  Widget _statRow(
+    BuildContext context,
+    String title,
+    String value, {
+    required double scale,
+  }) {
     final textTheme = Theme.of(context).textTheme;
-
-    final width = MediaQuery.of(context).size.width;
-    final scale = (width / 400).clamp(0.8, 1.3);
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 6 * scale),
@@ -47,8 +51,10 @@ class StatisticsPage extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    final width = MediaQuery.of(context).size.width;
-    final scale = (width / 400).clamp(0.8, 1.3);
+    final size = MediaQuery.of(context).size;
+    final widthScale = (size.width / 400).clamp(0.8, 1.3);
+    final heightScale = (size.height / 700).clamp(0.8, 1.2);
+    final scale = math.min(widthScale, heightScale);
 
     return Scaffold(
       appBar: AppBar(
@@ -84,22 +90,31 @@ class StatisticsPage extends StatelessWidget {
                           context,
                           "Игр сыграно",
                           stats.gamesPlayed.toString(),
+                          scale: scale,
                         ),
-                        _statRow(context, "Победы", stats.gamesWon.toString()),
+                        _statRow(
+                          context,
+                          "Победы",
+                          stats.gamesWon.toString(),
+                          scale: scale,
+                        ),
                         _statRow(
                           context,
                           "Текущая серия",
                           stats.currentStreak.toString(),
+                          scale: scale,
                         ),
                         _statRow(
                           context,
                           "Макс серия",
                           stats.maxStreak.toString(),
+                          scale: scale,
                         ),
                         _statRow(
                           context,
                           "Win rate",
                           "${stats.winRate.toStringAsFixed(1)}%",
+                          scale: scale,
                         ),
                       ],
                     ),
@@ -110,16 +125,20 @@ class StatisticsPage extends StatelessWidget {
 
                 Text(
                   "Победы по количеству попыток",
-                  style: textTheme.titleLarge,
+                  style: textTheme.titleLarge?.copyWith(
+                    fontSize: (textTheme.titleLarge?.fontSize ?? 20) * scale,
+                  ),
                   textAlign: TextAlign.center,
                 ),
+
                 SizedBox(height: 16 * scale),
+
                 SizedBox(
+                  height: 200 * scale,
                   child: AttemptsBarChart(
                     winsByAttempts: stats.winsByAttempts,
                     colorScheme: colorScheme,
                     textTheme: textTheme,
-                    maxHeight: 140 * scale,
                   ),
                 ),
 
@@ -134,10 +153,7 @@ class StatisticsPage extends StatelessWidget {
                       "Данные будут удалены без возможности восстановления.",
                       audioController: audioController,
                     );
-
-                    if (confirmed ?? false) {
-                      await statisticsController.reset();
-                    }
+                    if (confirmed ?? false) await statisticsController.reset();
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 14 * scale),
