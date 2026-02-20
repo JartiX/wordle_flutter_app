@@ -16,8 +16,6 @@ import 'widgets/settings_widget.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await WordRepository().load();
-
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -55,11 +53,8 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
     _settingsController = SettingsController(SettingsService());
     await _settingsController!.load();
 
-    _audioController = AudioController(
-      AudioPlayerService(),
-      _settingsController!,
-    );
-    _audioController!.init();
+    final currentLength = _settingsController!.wordLength.value;
+    await WordRepository(currentLength).load();
 
     _statisticsController = StatisticsController(StatisticsService());
     await _statisticsController!.load();
@@ -70,12 +65,20 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
     );
     _gameController!.init();
 
+    _audioController = AudioController(
+      AudioPlayerService(),
+      _settingsController!,
+    );
+    _audioController!.init();
+    await _audioController!.load();
+
     _themeController = ThemeController(_settingsController!);
 
-    await _audioController!.load();
-    setState(() {
-      _initialized = true;
-    });
+    if (mounted) {
+      setState(() {
+        _initialized = true;
+      });
+    }
   }
 
   @override
