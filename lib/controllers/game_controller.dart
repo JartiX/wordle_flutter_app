@@ -24,9 +24,24 @@ class GameController {
   bool get didWin => _game.didWin;
   bool get didLose => _game.didLose;
   Word get hiddenWord => _game.hiddenWord;
+  int get activeIndex => _game.activeIndex;
 
-  int get getWordLength => _game.wordLength;
-  int get getNumAllowedGuesses => _game.numAllowedGuesses;
+  int get wordLength => _game.wordLength;
+  int get numAllowedGuesses => _game.numAllowedGuesses;
+
+  List<Letter?> get hintLetters {
+    final length = wordLength;
+    List<Letter?> hints = List.filled(length, null);
+
+    for (var word in guessesNotifier.value) {
+      for (int i = 0; i < word.length; i++) {
+        if (word[i].type == HitType.hit) {
+          hints[i] = word[i];
+        }
+      }
+    }
+    return hints;
+  }
 
   bool isRightLength(String guess) =>
       guess.length == _settings.wordLength.value;
