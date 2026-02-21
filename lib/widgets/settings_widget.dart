@@ -3,6 +3,7 @@ import '../models/settings_model.dart';
 import '../controllers/game_controller.dart';
 import '../controllers/audio_controller.dart';
 import '../widgets/buttons/animated_restart_button.dart';
+import '../widgets/confirmation_dialog.dart';
 
 class SettingsWidget extends StatelessWidget {
   final GameController gameController;
@@ -34,7 +35,14 @@ class SettingsWidget extends StatelessWidget {
               AnimatedRestartButton(
                 audioController: audioController,
                 onPressed: () async {
-                  await gameController.settings.reset();
+                  audioController.playPop();
+                  final confirmed = await showConfirmationDialog(
+                    context,
+                    "Сбросить настройки",
+                    "Настройки будут сброшены до значений по умолчанию.",
+                    audioController: audioController,
+                  );
+                  if (confirmed ?? false) await gameController.settings.reset();
                 },
               ),
             ],
