@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'models/types.dart';
@@ -12,6 +12,7 @@ import 'controllers/game_controller.dart';
 import 'models/word.dart';
 import 'constants/keyboard_layouts.dart';
 import 'widgets/game_keyboard.dart';
+import 'widgets/shake_widget.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({
@@ -30,6 +31,8 @@ class GamePage extends StatefulWidget {
 class _GamePageState extends State<GamePage> {
   String? _errorMessage;
   bool _showError = false;
+  final StreamController<void> _shakeController =
+      StreamController<void>.broadcast();
 
   void _showTopError(String message) {
     setState(() {
@@ -106,15 +109,16 @@ class _GamePageState extends State<GamePage> {
 
   void _handleKeyEvent(String key) {
     if (widget.gameController.didWin || widget.gameController.didLose) return;
-    widget.audioController.playPop();
 
     if (key == KeyboardLayouts.enterKey) {
       widget.audioController.playSend();
       widget.gameController.submitCurrentGuess();
     } else if (key == KeyboardLayouts.deleteKey) {
       widget.gameController.removeLetter();
+      widget.audioController.playPop();
     } else if (RegExp(r'^[а-яА-Яa-zA-Z]$').hasMatch(key)) {
       widget.gameController.addLetter(key);
+      widget.audioController.playPop();
     }
   }
 
@@ -134,6 +138,7 @@ class _GamePageState extends State<GamePage> {
   @override
   void dispose() {
     widget.gameController.gameEvent.removeListener(_handleGameEvent);
+    _shakeController.close();
     super.dispose();
   }
 
@@ -151,6 +156,9 @@ class _GamePageState extends State<GamePage> {
 
     if (event.error != null) {
       _showTopError(event.error!);
+      _shakeController.add(null);
+      HapticFeedback.heavyImpact();
+      widget.audioController.playErrorWord();
     } else if (event.status == GameStatus.won) {
       widget.audioController.playWin();
       Future.delayed(const Duration(milliseconds: 800), () {
@@ -232,33 +240,52 @@ class _GamePageState extends State<GamePage> {
                               return Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: List.generate(rowsCount, (rowIndex) {
+                                  final bool isActiveRow =
+                                      rowIndex ==
+                                      widget.gameController.submittedCount;
+
+                                  Widget rowWidget = Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(lettersCount, (
+                                      colIndex,
+                                    ) {
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          right: colIndex == lettersCount - 1
+                                              ? 0
+                                              : spacing,
+                                        ),
+                                        child: _buildCell(
+                                          rowIndex,
+                                          colIndex,
+                                          guesses,
+                                          tileSize,
+                                        ),
+                                      );
+                                    }),
+                                  );
+
+                                  if (isActiveRow) {
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom: rowIndex == rowsCount - 1
+                                            ? 0
+                                            : spacing,
+                                      ),
+                                      child: ShakeWidget(
+                                        trigger: _shakeController.stream,
+                                        child: rowWidget,
+                                      ),
+                                    );
+                                  }
+
                                   return Padding(
                                     padding: EdgeInsets.only(
                                       bottom: rowIndex == rowsCount - 1
                                           ? 0
                                           : spacing,
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: List.generate(lettersCount, (
-                                        colIndex,
-                                      ) {
-                                        return Padding(
-                                          padding: EdgeInsets.only(
-                                            right: colIndex == lettersCount - 1
-                                                ? 0
-                                                : spacing,
-                                          ),
-                                          child: _buildCell(
-                                            rowIndex,
-                                            colIndex,
-                                            guesses,
-                                            tileSize,
-                                          ),
-                                        );
-                                      }),
-                                    ),
+                                    child: rowWidget,
                                   );
                                 }),
                               );
@@ -270,7 +297,7 @@ class _GamePageState extends State<GamePage> {
                   ),
 
                   Expanded(
-                    flex: 7,
+                    flex: 4,
                     child: ValueListenableBuilder<String>(
                       valueListenable:
                           widget.gameController.currentGuessNotifier,
@@ -279,18 +306,25 @@ class _GamePageState extends State<GamePage> {
                           valueListenable:
                               widget.gameController.keyboardStatuses,
                           builder: (context, statuses, _) {
-                            return GameKeyboard(
-                              statuses: statuses,
-                              language:
-                                  widget.gameController.settings.language.value,
-                              onKeyTap: _handleKeyEvent,
-                              enterButton: AnimatedSendButton(
-                                isEnabled: widget.gameController.isRightLength(
-                                  guess,
+                            return Padding(
+                              padding: EdgeInsetsGeometry.symmetric(
+                                vertical: 5,
+                              ),
+                              child: GameKeyboard(
+                                statuses: statuses,
+                                language: widget
+                                    .gameController
+                                    .settings
+                                    .language
+                                    .value,
+                                onKeyTap: _handleKeyEvent,
+                                enterButton: AnimatedSendButton(
+                                  isEnabled: widget.gameController
+                                      .isRightLength(guess),
+                                  onPressed: () =>
+                                      _handleKeyEvent(KeyboardLayouts.enterKey),
+                                  audioController: widget.audioController,
                                 ),
-                                onPressed: () =>
-                                    _handleKeyEvent(KeyboardLayouts.enterKey),
-                                audioController: widget.audioController,
                               ),
                             );
                           },
