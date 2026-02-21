@@ -50,13 +50,11 @@ class _GameOverDialogState extends State<GameOverDialog>
   }
 
   Future<void> _closeDialog() async {
-    _controller.reverse(from: 1.0);
-    setState(() {});
+    await _controller.reverse(from: 1.0);
 
-    await Future.delayed(_controller.duration!);
+    if (mounted) Navigator.of(context).pop();
 
     widget.onPlayAgain();
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -185,21 +183,21 @@ class _GameOverDialogState extends State<GameOverDialog>
                     const SizedBox(height: 24),
 
                     SizedBox(
-  width: double.infinity,
-  child: Material(
-    color: wordBackgroundColor,
-    borderRadius: BorderRadius.circular(24),
-    child: InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: _closeDialog,
-      child: AnimatedRestartButton(
-        onPressed: _closeDialog,
-        isEnabled: true,
-        audioController: widget.audioController,
-      ),
-    ),
-  ),
-),
+                      width: double.infinity,
+                      child: Material(
+                        color: wordBackgroundColor,
+                        borderRadius: BorderRadius.circular(24),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap: _closeDialog,
+                          child: AnimatedRestartButton(
+                            onPressed: _closeDialog,
+                            isEnabled: true,
+                            audioController: widget.audioController,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

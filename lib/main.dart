@@ -12,6 +12,7 @@ import 'controllers/theme_controller.dart';
 import 'services/settings_service.dart';
 import 'services/statistics_service.dart';
 import 'widgets/settings_widget.dart';
+import 'widgets/buttons/animated_restart_button.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -220,6 +221,10 @@ class _RootScreen extends StatelessWidget {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text("ВОРДЛИ"),
+        leading: AnimatedRestartButton(
+          onPressed: gameController.resetGame,
+          audioController: audioController,
+        ),
         actions: [
           IconButton(
             onPressed: () {

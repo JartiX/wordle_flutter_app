@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'settings_controller.dart';
 import 'statistics_controller.dart';
+import '../constants/keyboard_layouts.dart';
 import '../models/game.dart';
 import '../models/word.dart';
 import '../models/types.dart';
@@ -8,6 +9,15 @@ import '../events/game_events.dart';
 import '../repositories/word_repository.dart';
 
 class GameController {
+  void init() async {
+    await _createGame();
+
+    _settings.attempts.addListener(resetGame);
+    _settings.wordLength.addListener(resetGame);
+  }
+
+  GameController(this._settings, this._statisticsController);
+
   final SettingsController _settings;
 
   SettingsController get settings => _settings;
@@ -17,17 +27,19 @@ class GameController {
   StatisticsController get statisticsController => _statisticsController;
 
   late Game _game;
-  bool _isReady = false;
-  bool get isReady => _isReady;
   Game get game => _game;
 
   bool get didWin => _game.didWin;
   bool get didLose => _game.didLose;
   Word get hiddenWord => _game.hiddenWord;
-  int get activeIndex => _game.activeIndex;
 
   int get wordLength => _game.wordLength;
   int get numAllowedGuesses => _game.numAllowedGuesses;
+
+  List<List<String>> get currentLayout =>
+      KeyboardLayouts.layouts[_settings.language.value]!;
+
+  final ValueNotifier<String> currentGuessNotifier = ValueNotifier("");
 
   List<Letter?> get hintLetters {
     final length = wordLength;
@@ -43,23 +55,40 @@ class GameController {
     return hints;
   }
 
-  bool isRightLength(String guess) =>
-      guess.length == _settings.wordLength.value;
+  int get submittedCount {
+    final guesses = guessesNotifier.value;
+    int count = 0;
+
+    for (var word in guesses) {
+      bool hasContent = false;
+      for (var letter in word) {
+        final String ch = (letter.char);
+        final HitType t = (letter.type);
+
+        if (ch.isNotEmpty || t != HitType.none) {
+          hasContent = true;
+          break;
+        }
+      }
+      if (hasContent) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  final ValueNotifier<Map<String, HitType>> keyboardStatuses = ValueNotifier(
+    {},
+  );
+
+  final ValueNotifier<GameEvent?> gameEvent = ValueNotifier(null);
 
   final ValueNotifier<List<Word>> guessesNotifier = ValueNotifier<List<Word>>(
     [],
   );
 
-  void init() async {
-    await _createGame(); // Ждем создания первой игры
-
-    _settings.attempts.addListener(_createGame);
-    _settings.wordLength.addListener(_createGame);
-  }
-
-  GameController(this._settings, this._statisticsController);
-
-  final ValueNotifier<GameEvent?> gameEvent = ValueNotifier(null);
+  bool isRightLength(String guess) =>
+      guess.length == _settings.wordLength.value;
 
   GuessResult submitGuess(String guess) {
     final result = _game.guess(guess);
@@ -84,16 +113,69 @@ class GameController {
     return result;
   }
 
+  GuessResult submitCurrentGuess() {
+    final guess = currentGuessNotifier.value;
+    final result = submitGuess(guess);
+    if (result.error == null) {
+      _updateKeyboardStatuses(_game.previousGuess);
+      currentGuessNotifier.value = "";
+    }
+    return result;
+  }
+
+  void _updateKeyboardStatuses(Word guess) {
+    final current = Map<String, HitType>.from(keyboardStatuses.value);
+
+    for (var letter in guess) {
+      final char = letter.char.toUpperCase();
+      final oldStatus = current[char];
+
+      if (oldStatus == HitType.hit) continue;
+
+      if (letter.type == HitType.hit) {
+        current[char] = HitType.hit;
+      } else if (letter.type == HitType.partial && oldStatus != HitType.hit) {
+        current[char] = HitType.partial;
+      } else if (letter.type == HitType.miss && oldStatus == null) {
+        current[char] = HitType.miss;
+      }
+    }
+    keyboardStatuses.value = current;
+  }
+
+  void addLetter(String char) {
+    if (currentGuessNotifier.value.length < wordLength && !didWin && !didLose) {
+      currentGuessNotifier.value += char.toLowerCase();
+    }
+  }
+
+  void removeLetter() {
+    if (currentGuessNotifier.value.isNotEmpty) {
+      currentGuessNotifier.value = currentGuessNotifier.value.substring(
+        0,
+        currentGuessNotifier.value.length - 1,
+      );
+    }
+  }
+
   Future<void> _createGame() async {
     final len = _settings.wordLength.value;
     await WordRepository(len).load();
 
     _game = Game(numAllowedGuesses: _settings.attempts.value, wordLength: len);
-    guessesNotifier.value = List<Word>.from(_game.guesses);
-    _isReady = true;
   }
 
-  void resetGame() {
-    _createGame();
+  void _reset() {
+    keyboardStatuses.value = {};
+    currentGuessNotifier.value = "";
+    guessesNotifier.value = List<Word>.from(_game.guesses);
+  }
+
+  Future<void> resetGame() async {
+    if (submittedCount != 0) {
+      _statisticsController.recordGame(won: false);
+    }
+    await _createGame();
+    _reset();
   }
 }

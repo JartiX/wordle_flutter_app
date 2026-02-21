@@ -11,3 +11,17 @@ class Letter {
 
   Letter({required this.char, this.type = HitType.none});
 }
+
+enum GameLanguage {
+  ru,
+  en;
+
+  String toJson() => name;
+
+  static GameLanguage fromJson(String json) {
+    return GameLanguage.values.firstWhere(
+      (e) => e.name == json,
+      orElse: () => GameLanguage.ru,
+    );
+  }
+}

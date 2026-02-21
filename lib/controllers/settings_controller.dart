@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../models/types.dart';
 import '../services/settings_service.dart';
 import '../models/settings_model.dart';
 
@@ -26,6 +26,9 @@ class SettingsController {
   late final ValueNotifier<int> wordLength = ValueNotifier<int>(
     SettingsModel.defaults().wordLength,
   );
+  late final ValueNotifier<GameLanguage> language = ValueNotifier(
+    SettingsModel.defaults().language,
+  );
 
   SettingsController(this._service);
 
@@ -38,6 +41,7 @@ class SettingsController {
     volume.value = _settings.volume;
     theme.value = _settings.theme;
     wordLength.value = _settings.wordLength;
+    language.value = _settings.language;
   }
 
   Future<void> _save() async {
@@ -48,6 +52,7 @@ class SettingsController {
       volume: volume.value,
       theme: theme.value,
       wordLength: wordLength.value,
+      language: language.value,
     );
 
     await _service.save(_settings);
@@ -85,6 +90,11 @@ class SettingsController {
 
   Future<void> setWordLength(int value) async {
     wordLength.value = value;
+    await _save();
+  }
+
+  Future<void> setLanguage(GameLanguage value) async {
+    language.value = value;
     await _save();
   }
 
