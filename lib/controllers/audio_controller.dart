@@ -17,7 +17,7 @@ class AudioController {
     _settings.volume.addListener(_handleVolumeChange);
   }
 
-  void _handleMusicToggle() async{
+  void _handleMusicToggle() async {
     if (_settings.musicEnabled.value) {
       await _audioService.setVolume(_settings.volume.value);
       await _audioService.playBackground();
@@ -27,9 +27,7 @@ class AudioController {
   }
 
   void _handleVolumeChange() {
-    if (_settings.musicEnabled.value) {
-      _audioService.setVolume(_settings.volume.value);
-    }
+    _audioService.setVolume(_settings.volume.value);
   }
 
   Future<void> load() async {
@@ -40,31 +38,37 @@ class AudioController {
 
   Future<void> playClick() async {
     if (_settings.sfxEnabled.value) {
-      await _audioService.playClick();
+      _audioService.playClick();
     }
   }
 
   Future<void> playPop() async {
     if (_settings.sfxEnabled.value) {
-      await _audioService.playPop();
+      _audioService.playPop();
     }
   }
-  
+
   Future<void> playSend() async {
     if (_settings.sfxEnabled.value) {
-      await _audioService.playSend();
+      _audioService.playSend();
     }
   }
 
   Future<void> playWin() async {
     if (_settings.sfxEnabled.value) {
-      await _audioService.playWin();
+      _audioService.playWin();
     }
   }
 
   Future<void> playLose() async {
     if (_settings.sfxEnabled.value) {
-      await _audioService.playLose();
+      _audioService.playLose();
+    }
+  }
+
+  Future<void> playErrorWord() async {
+    if (_settings.sfxEnabled.value) {
+      _audioService.playErrorWord();
     }
   }
 

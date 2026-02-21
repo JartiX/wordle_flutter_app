@@ -6,7 +6,8 @@ class AudioPlayerService {
 
   final AudioPlayer _backgroundPlayer = AudioPlayer();
   final AudioPlayer _effectPlayer = AudioPlayer();
-  bool _effectPlaying = false;
+
+  final Map<String, AudioPlayer> _cache = {};
 
   AudioPlayerService._internal();
 
@@ -15,6 +16,13 @@ class AudioPlayerService {
   Future<void> init() async {
     _backgroundPlayer.setLoopMode(LoopMode.one);
     await _backgroundPlayer.setAsset(Assets.backgroundMusic);
+
+    await _preloadEffect(Assets.clickSound);
+    await _preloadEffect(Assets.popSound);
+    await _preloadEffect(Assets.sendSound);
+    await _preloadEffect(Assets.winSound);
+    await _preloadEffect(Assets.loseSound);
+    await _preloadEffect(Assets.errorWordSound);
   }
 
   Future<void> playBackground({
@@ -63,29 +71,33 @@ class AudioPlayerService {
       await Future.delayed(stepDuration);
     }
     await _backgroundPlayer.stop();
-    await _backgroundPlayer.setVolume(
-      initialVolume,
-    ); // вернуть на следующий запуск
+    await _backgroundPlayer.setVolume(initialVolume);
+  }
+
+  Future<void> _preloadEffect(String asset) async {
+    if (!_cache.containsKey(asset)) {
+      final player = AudioPlayer();
+      await player.setAsset(asset);
+      _cache[asset] = player;
+    }
   }
 
   Future<void> _playEffect(String asset) async {
     try {
-      if (_effectPlaying) {
-        await _effectPlayer.stop();
+      final player = _cache[asset];
+
+      if (player == null) {
+        await _preloadEffect(asset);
+        _playEffect(asset);
+        return;
       }
-      _effectPlaying = true;
-      await _effectPlayer.setAsset(asset);
 
-      await _effectPlayer.play();
+      await player.seek(Duration.zero);
+      await player.setVolume(_backgroundPlayer.volume);
 
-      _effectPlayer.playerStateStream.listen((state) {
-        if (state.processingState == ProcessingState.completed ||
-            state.processingState == ProcessingState.idle) {
-          _effectPlaying = false;
-        }
-      });
-    } catch (_) {
-      _effectPlaying = false;
+      player.play();
+    } catch (e) {
+      return;
     }
   }
 
@@ -94,6 +106,7 @@ class AudioPlayerService {
   Future<void> playWin() async => _playEffect(Assets.winSound);
   Future<void> playLose() async => _playEffect(Assets.loseSound);
   Future<void> playPop() async => _playEffect(Assets.popSound);
+  Future<void> playErrorWord() async => _playEffect(Assets.errorWordSound);
 
   Future<void> dispose() async {
     await _backgroundPlayer.dispose();
