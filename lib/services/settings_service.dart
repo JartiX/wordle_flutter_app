@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wordle_flutter/models/types.dart';
 import '../models/settings_model.dart';
 import '../constants/pref_keys.dart';
 
@@ -11,7 +12,8 @@ class SettingsService {
         !prefs.containsKey(PrefKeys.musicEnabled) ||
         !prefs.containsKey(PrefKeys.volume) ||
         !prefs.containsKey(PrefKeys.theme) ||
-        !prefs.containsKey(PrefKeys.wordLength)) {
+        !prefs.containsKey(PrefKeys.wordLength) ||
+        !prefs.containsKey(PrefKeys.language)) {
       return SettingsModel.defaults();
     }
 
@@ -22,6 +24,7 @@ class SettingsService {
       volume: prefs.getDouble(PrefKeys.volume)!,
       theme: prefs.getString(PrefKeys.theme)!,
       wordLength: prefs.getInt(PrefKeys.wordLength)!,
+      language: GameLanguage.fromJson(prefs.getString(PrefKeys.language)!),
     );
   }
 
@@ -34,6 +37,7 @@ class SettingsService {
     await prefs.setDouble(PrefKeys.volume, settings.volume);
     await prefs.setString(PrefKeys.theme, settings.theme);
     await prefs.setInt(PrefKeys.wordLength, settings.wordLength);
+    await prefs.setString(PrefKeys.language, settings.language.toJson());
   }
 
   Future<void> reset() async {
