@@ -9,4 +9,5 @@ class PrefKeys {
   static const maxStreakKey = 'maxStreak';
   static const winsByAttemptsKeyPrefix = 'winsByAttempts_';
   static const wordLength = 'wordLength';
+  static const language = 'language';
 }
