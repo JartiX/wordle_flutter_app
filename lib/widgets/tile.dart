@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/types.dart';
 
@@ -8,129 +9,215 @@ class Tile extends StatefulWidget {
     super.key,
     required this.size,
     this.needOpacity = false,
+    this.animationDelay = 0,
   });
 
   final String letter;
   final HitType hitType;
   final double size;
   final bool needOpacity;
+  final int animationDelay;
 
   @override
   State<Tile> createState() => _TileState();
 }
 
 class _TileState extends State<Tile> with SingleTickerProviderStateMixin {
-  bool _isAnimating = false;
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+
+    if (widget.hitType != HitType.none) {
+      Future.delayed(Duration(milliseconds: widget.animationDelay), () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
 
   @override
   void didUpdateWidget(covariant Tile oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.hitType != widget.hitType && widget.hitType != HitType.none) {
-      animateTrigger();
+    if (oldWidget.hitType != widget.hitType) {
+      _controller.reset();
+      if (widget.hitType != HitType.none) {
+        Future.delayed(Duration(milliseconds: widget.animationDelay), () {
+          if (mounted) _controller.forward(from: 0);
+        });
+      }
     }
   }
 
-  void animateTrigger() {
-    setState(() => _isAnimating = true);
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) setState(() => _isAnimating = false);
-    });
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Color _getBaseColor(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    switch (widget.hitType) {
+      case HitType.hit:
+        return const Color(0xFF4CAF50);
+      case HitType.partial:
+        return const Color(0xFFFFB300);
+      case HitType.miss:
+        return isDark
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
+            : theme.colorScheme.primary.withValues(alpha: 0.4);
+      default:
+        return Colors.transparent;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final baseColor = _getBaseColor(context, isDark);
 
-    Color getBaseColor() {
-      switch (widget.hitType) {
-        case HitType.hit:
-          return const Color(0xFF4CAF50);
-        case HitType.partial:
-          return const Color(0xFFFFB300);
-        case HitType.miss:
-          return isDark ? Colors.grey.shade700 : Colors.grey.shade400;
-        default:
-          return Colors.transparent;
-      }
-    }
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final value = _animation.value;
+        final isSecondHalf = value > 0.5;
+        final rotation = value * pi;
+        final bool showFullStyle =
+            isSecondHalf || (widget.hitType != HitType.none && value == 1.0);
 
-    final baseColor = getBaseColor();
-
-    final boxDecoration = widget.hitType == HitType.none
-        ? BoxDecoration(
-            borderRadius: BorderRadius.circular(widget.size * 0.2),
-            color: isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.05)
-                : theme.colorScheme.primary.withValues(alpha: 0.05),
-            border: Border.all(
-              color: isDark ? Colors.white24 : theme.colorScheme.outline,
-              width: 1.5,
-            ),
-          )
-        : BoxDecoration(
-            borderRadius: BorderRadius.circular(widget.size * 0.2),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [baseColor.withValues(alpha: 0.8), baseColor],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isDark ? baseColor.withValues(alpha: 0.5) : baseColor.withValues(alpha: 0.7),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          );
-
-    return AnimatedScale(
-      duration: const Duration(milliseconds: 200),
-      scale: _isAnimating ? 1.15 : 1.0,
-      curve: Curves.bounceOut,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
-        width: widget.size,
-        height: widget.size,
-        decoration: boxDecoration,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(widget.size * 0.2),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.white.withValues(alpha: 0.15),
-                Colors.transparent,
-              ],
-            ),
+        final emptyDecoration = BoxDecoration(
+          borderRadius: BorderRadius.circular(widget.size * 0.2),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    theme.colorScheme.primary.withValues(alpha: 0.05),
+                    theme.colorScheme.surface,
+                  ]
+                : [
+                    Colors.white,
+                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                  ],
           ),
-          child: Center(
-            child: Opacity(
-              opacity: widget.needOpacity ? 0.3 : 1.0,
-              child: Text(
-                widget.letter.toUpperCase(),
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontSize: widget.size * 0.5,
-                  fontWeight: FontWeight.w900,
-                  color: widget.hitType == HitType.none
-                      ? (isDark ? Colors.white : Colors.black87)
-                      : Colors.white,
-                  shadows: widget.hitType != HitType.none
-                      ? [
-                          Shadow(
-                            offset: const Offset(0, 2),
-                            blurRadius: 4,
-                            color: Colors.black.withValues(alpha: 0.3),
+          border: Border.all(
+            color: theme.colorScheme.primary.withValues(
+              alpha: isDark ? 0.3 : 0.2,
+            ),
+            width: 1.5,
+          ),
+        );
+
+        final fullDecoration = BoxDecoration(
+          borderRadius: BorderRadius.circular(widget.size * 0.2),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [baseColor.withValues(alpha: 0.9), baseColor],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: baseColor.withValues(alpha: isDark ? 0.4 : 0.5),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        );
+
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.002)
+            ..rotateX(rotation),
+          child: Transform(
+            alignment: Alignment.center,
+            transform: isSecondHalf
+                ? Matrix4.rotationX(pi)
+                : Matrix4.identity(),
+            child: Container(
+              width: widget.size,
+              height: widget.size,
+              decoration: showFullStyle ? fullDecoration : emptyDecoration,
+              child: Stack(
+                children: [
+                  if (!showFullStyle)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(
+                            widget.size * 0.2,
                           ),
-                        ]
-                      : null,
-                ),
+                          gradient: RadialGradient(
+                            center: Alignment.topLeft,
+                            radius: 1.0,
+                            colors: [
+                              theme.colorScheme.primary.withValues(
+                                alpha: isDark ? 0.15 : 0.05,
+                              ),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(widget.size * 0.2),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(
+                            alpha: showFullStyle ? 0.2 : 0.08,
+                          ),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                    child: Center(
+                      child: Opacity(
+                        opacity: widget.needOpacity ? 0.3 : 1.0,
+                        child: Text(
+                          widget.letter.trim().isEmpty
+                              ? ''
+                              : widget.letter.toUpperCase(),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontSize: widget.size * 0.5,
+                            fontWeight: FontWeight.w900,
+                            color: showFullStyle
+                                ? Colors.white
+                                : theme.colorScheme.primary.withValues(
+                                    alpha: 0.9,
+                                  ),
+                            shadows: showFullStyle
+                                ? [
+                                    const Shadow(
+                                      offset: Offset(0, 2),
+                                      blurRadius: 4,
+                                      color: Colors.black26,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
