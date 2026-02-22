@@ -62,11 +62,13 @@ class _AttemptsBarChartState extends State<AttemptsBarChart>
 
   @override
   Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, _) {
         return Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: widget.winsByAttempts.entries.map((entry) {
             final attempts = entry.key;
@@ -75,45 +77,93 @@ class _AttemptsBarChartState extends State<AttemptsBarChart>
                 ? 0
                 : (wins / _maxWins) * _animation.value;
 
+            final bool isMax = wins == _maxWins && wins != 0;
+
+            const double labelHeight = 36;
+
             return Column(
               mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Flexible(
-                  child: Text(
-                    wins != 0 ? wins.toString() : " ",
-                    style: widget.textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
                 const SizedBox(height: 4),
-                Container(
-                  height: widget.maxHeight,
+                SizedBox(
+                  height: widget.maxHeight + labelHeight,
                   width: 28,
-                  alignment: Alignment.bottomCenter,
-                  child: FractionallySizedBox(
-                    heightFactor: fraction,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            widget.colorScheme.primaryContainer,
-                            widget.colorScheme.primary,
-                          ],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      Positioned(
+                        bottom: 0,
+                        child: SizedBox(
+                          height: widget.maxHeight,
+                          width: 28,
+                          child: FractionallySizedBox(
+                            heightFactor: fraction,
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    widget.colorScheme.primaryContainer,
+                                    widget.colorScheme.primary,
+                                  ],
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
+
+                      if (wins > 0)
+                        Positioned(
+                          bottom: widget.maxHeight * fraction,
+                          child: isMax
+                              ? Stack(
+                                  alignment: Alignment.center,
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Positioned(
+                                      bottom: 18,
+                                      child: Text(
+                                        wins.toString(),
+                                        style: widget.textTheme.bodySmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                              height: 1,
+                                            ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.emoji_events_rounded,
+                                      size: 20,
+                                      color: Colors.amber.shade700,
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  wins.toString(),
+                                  style: widget.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                    height: 1.5,
+                                  ),
+                                ),
+                        ),
+                    ],
                   ),
                 ),
+
                 const SizedBox(height: 4),
-                Flexible(
-                  child: Text(
-                    attempts.toString(),
-                    style: widget.textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
+
+                Text(
+                  attempts.toString(),
+                  style: widget.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
                 ),
               ],
             );
