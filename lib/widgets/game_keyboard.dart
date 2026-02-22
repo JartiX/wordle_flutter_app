@@ -708,28 +708,31 @@ class _WideEnterButtonState extends State<_WideEnterButton>
                           ),
                         ),
                         Center(
-                          child: Text(
-                            "ПРОВЕРИТЬ",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
-                              fontFamily:
-                                  theme.textTheme.bodyMedium?.fontFamily,
-                              color: widget.isEnabled
-                                  ? Colors.white
-                                  : color.withValues(alpha: 0.6),
-                              shadows: widget.isEnabled
-                                  ? [
-                                      Shadow(
-                                        offset: const Offset(0, 1),
-                                        blurRadius: 3,
-                                        color: Colors.black.withValues(
-                                          alpha: 0.25,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "ПРОВЕРИТЬ",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.2,
+                                fontFamily:
+                                    theme.textTheme.bodyMedium?.fontFamily,
+                                color: widget.isEnabled
+                                    ? Colors.white
+                                    : color.withValues(alpha: 0.6),
+                                shadows: widget.isEnabled
+                                    ? [
+                                        Shadow(
+                                          offset: const Offset(0, 1),
+                                          blurRadius: 3,
+                                          color: Colors.black.withValues(
+                                            alpha: 0.25,
+                                          ),
                                         ),
-                                      ),
-                                    ]
-                                  : [],
+                                      ]
+                                    : [],
+                              ),
                             ),
                           ),
                         ),
