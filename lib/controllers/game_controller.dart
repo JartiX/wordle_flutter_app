@@ -41,6 +41,12 @@ class GameController {
 
   final ValueNotifier<String> currentGuessNotifier = ValueNotifier("");
 
+  final ValueNotifier<List<Word>?> _reversingGuesses = ValueNotifier(null);
+
+  bool get isResetting => _reversingGuesses.value != null;
+
+  ValueNotifier<List<Word>?> get reversingGuessesNotifier => _reversingGuesses;
+
   List<Letter?> get hintLetters {
     final length = wordLength;
     List<Letter?> hints = List.filled(length, null);
@@ -101,10 +107,7 @@ class GameController {
       );
     } else if (_game.didWin) {
       gameEvent.value = GameEvent(status: GameStatus.won);
-      _statisticsController.recordGame(
-        won: true,
-        attempts: _game.numAllowedGuesses,
-      );
+      _statisticsController.recordGame(won: true, attempts: submittedCount);
     } else if (_game.didLose) {
       gameEvent.value = GameEvent(status: GameStatus.lost);
       _statisticsController.recordGame(won: false);
@@ -144,12 +147,14 @@ class GameController {
   }
 
   void addLetter(String char) {
+    if (isResetting) return;
     if (currentGuessNotifier.value.length < wordLength && !didWin && !didLose) {
       currentGuessNotifier.value += char.toLowerCase();
     }
   }
 
   void removeLetter() {
+    if (isResetting) return;
     if (currentGuessNotifier.value.isNotEmpty) {
       currentGuessNotifier.value = currentGuessNotifier.value.substring(
         0,
@@ -172,10 +177,25 @@ class GameController {
   }
 
   Future<void> resetGame() async {
-    if (submittedCount != 0) {
+    if (!_game.didWin && !_game.didLose && submittedCount != 0) {
       _statisticsController.recordGame(won: false);
     }
+
+    final oldSubmittedCount = submittedCount;
+    final oldGuesses = List<Word>.from(guessesNotifier.value);
+
     await _createGame();
-    _reset();
+
+    if (oldSubmittedCount > 0) {
+      _reversingGuesses.value = oldGuesses;
+      _reset();
+
+      final maxDelay = (wordLength - 1) * 150 + 500 + 50;
+      await Future.delayed(Duration(milliseconds: maxDelay));
+
+      _reversingGuesses.value = null;
+    } else {
+      _reset();
+    }
   }
 }

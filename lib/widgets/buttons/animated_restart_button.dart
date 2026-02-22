@@ -79,12 +79,10 @@ class _AnimatedRestartButtonState extends State<AnimatedRestartButton>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    // final theme = Theme.of(context);
+    // final colorScheme = theme.colorScheme;
 
-    final Color enabledColor = widget.isEnabled
-        ? colorScheme.primary
-        : colorScheme.onSurface.withValues(alpha: .5);
+    // final Color enabledColor = colorScheme.primary;
 
     return GestureDetector(
       onTap: _handleTap,
@@ -96,7 +94,7 @@ class _AnimatedRestartButtonState extends State<AnimatedRestartButton>
             child: Transform.scale(scale: _scaleAnimation.value, child: child),
           );
         },
-        child: Icon(Icons.refresh, color: enabledColor, size: 32),
+        child: Icon(Icons.refresh, size: 32),
       ),
     );
   }

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'models/types.dart';
 import 'widgets/game_over_dialog.dart';
-import 'widgets/buttons/animated_send_button.dart';
 import 'widgets/tile.dart';
 import 'widgets/top_toast.dart';
 import 'controllers/audio_controller.dart';
@@ -51,14 +50,39 @@ class _GamePageState extends State<GamePage> {
     int rowIndex,
     int colIndex,
     List<Word> guesses,
+    List<Word>? reversingGuesses,
     double tileSize,
   ) {
     final submittedCount = widget.gameController.submittedCount;
+    final bool isResetting = reversingGuesses != null;
+
+    if (isResetting && rowIndex < reversingGuesses.length) {
+      final oldWord = reversingGuesses[rowIndex];
+      bool wasSubmitted = false;
+      for (var letter in oldWord) {
+        if (letter.char.isNotEmpty || letter.type != HitType.none) {
+          wasSubmitted = true;
+          break;
+        }
+      }
+
+      if (wasSubmitted) {
+        return Tile(
+          '',
+          HitType.none,
+          size: tileSize,
+          animationDelay: colIndex * 150,
+          key: ValueKey("tile-$rowIndex-$colIndex"),
+        );
+      }
+    }
+
     final bool isSubmittedRow = rowIndex < submittedCount;
     final bool isActiveRow =
         rowIndex == submittedCount &&
         !widget.gameController.didWin &&
-        !widget.gameController.didLose;
+        !widget.gameController.didLose &&
+        !isResetting;
 
     if (isSubmittedRow) {
       final letter = guesses[rowIndex][colIndex];
@@ -109,6 +133,7 @@ class _GamePageState extends State<GamePage> {
 
   void _handleKeyEvent(String key) {
     if (widget.gameController.didWin || widget.gameController.didLose) return;
+    if (widget.gameController.isResetting) return;
 
     if (key == KeyboardLayouts.enterKey) {
       widget.audioController.playSend();
@@ -146,7 +171,6 @@ class _GamePageState extends State<GamePage> {
   void initState() {
     super.initState();
     widget.gameController.gameEvent.addListener(_handleGameEvent);
-
     widget.audioController.load();
   }
 
@@ -177,8 +201,6 @@ class _GamePageState extends State<GamePage> {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    // final theme = Theme.of(context);
-
     final topPadding = media.padding.top;
     final bottomPadding = media.padding.bottom;
 
@@ -213,81 +235,96 @@ class _GamePageState extends State<GamePage> {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      child: ValueListenableBuilder<List<Word>>(
-                        valueListenable: widget.gameController.guessesNotifier,
-                        builder: (context, guesses, _) {
-                          return LayoutBuilder(
-                            builder: (context, constraints) {
-                              final lettersCount =
-                                  widget.gameController.wordLength;
-                              final rowsCount =
-                                  widget.gameController.numAllowedGuesses;
-                              const spacing = 5.0;
+                      child: ValueListenableBuilder<List<Word>?>(
+                        valueListenable:
+                            widget.gameController.reversingGuessesNotifier,
+                        builder: (context, reversingGuesses, _) {
+                          return ValueListenableBuilder<List<Word>>(
+                            valueListenable:
+                                widget.gameController.guessesNotifier,
+                            builder: (context, guesses, _) {
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final lettersCount =
+                                      widget.gameController.wordLength;
+                                  final rowsCount =
+                                      widget.gameController.numAllowedGuesses;
+                                  const spacing = 5.0;
 
-                              final tileWidth =
-                                  (constraints.maxWidth -
-                                      (spacing * (lettersCount - 1))) /
-                                  lettersCount;
-                              final tileHeight =
-                                  (constraints.maxHeight -
-                                      (spacing * (rowsCount - 1))) /
-                                  rowsCount;
-                              final tileSize = min(
-                                tileWidth,
-                                tileHeight,
-                              ).clamp(30.0, 70.0);
+                                  final tileWidth =
+                                      (constraints.maxWidth -
+                                          (spacing * (lettersCount - 1))) /
+                                      lettersCount;
+                                  final tileHeight =
+                                      (constraints.maxHeight -
+                                          (spacing * (rowsCount - 1))) /
+                                      rowsCount;
+                                  final tileSize = min(
+                                    tileWidth,
+                                    tileHeight,
+                                  ).clamp(30.0, 70.0);
 
-                              return Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: List.generate(rowsCount, (rowIndex) {
-                                  final bool isActiveRow =
-                                      rowIndex ==
-                                      widget.gameController.submittedCount;
-
-                                  Widget rowWidget = Row(
+                                  return Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: List.generate(lettersCount, (
-                                      colIndex,
+                                    children: List.generate(rowsCount, (
+                                      rowIndex,
                                     ) {
+                                      final bool isActiveRow =
+                                          rowIndex ==
+                                              widget
+                                                  .gameController
+                                                  .submittedCount &&
+                                          !widget.gameController.isResetting;
+
+                                      Widget rowWidget = Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: List.generate(lettersCount, (
+                                          colIndex,
+                                        ) {
+                                          return Padding(
+                                            padding: EdgeInsets.only(
+                                              right:
+                                                  colIndex == lettersCount - 1
+                                                  ? 0
+                                                  : spacing,
+                                            ),
+                                            child: _buildCell(
+                                              rowIndex,
+                                              colIndex,
+                                              guesses,
+                                              reversingGuesses,
+                                              tileSize,
+                                            ),
+                                          );
+                                        }),
+                                      );
+
+                                      if (isActiveRow) {
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom: rowIndex == rowsCount - 1
+                                                ? 0
+                                                : spacing,
+                                          ),
+                                          child: ShakeWidget(
+                                            trigger: _shakeController.stream,
+                                            child: rowWidget,
+                                          ),
+                                        );
+                                      }
+
                                       return Padding(
                                         padding: EdgeInsets.only(
-                                          right: colIndex == lettersCount - 1
+                                          bottom: rowIndex == rowsCount - 1
                                               ? 0
                                               : spacing,
                                         ),
-                                        child: _buildCell(
-                                          rowIndex,
-                                          colIndex,
-                                          guesses,
-                                          tileSize,
-                                        ),
+                                        child: rowWidget,
                                       );
                                     }),
                                   );
-
-                                  if (isActiveRow) {
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                        bottom: rowIndex == rowsCount - 1
-                                            ? 0
-                                            : spacing,
-                                      ),
-                                      child: ShakeWidget(
-                                        trigger: _shakeController.stream,
-                                        child: rowWidget,
-                                      ),
-                                    );
-                                  }
-
-                                  return Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: rowIndex == rowsCount - 1
-                                          ? 0
-                                          : spacing,
-                                    ),
-                                    child: rowWidget,
-                                  );
-                                }),
+                                },
                               );
                             },
                           );
@@ -295,7 +332,6 @@ class _GamePageState extends State<GamePage> {
                       ),
                     ),
                   ),
-
                   Expanded(
                     flex: 4,
                     child: ValueListenableBuilder<String>(
@@ -318,12 +354,8 @@ class _GamePageState extends State<GamePage> {
                                     .language
                                     .value,
                                 onKeyTap: _handleKeyEvent,
-                                enterButton: AnimatedSendButton(
-                                  isEnabled: widget.gameController
-                                      .isRightLength(guess),
-                                  onPressed: () =>
-                                      _handleKeyEvent(KeyboardLayouts.enterKey),
-                                  audioController: widget.audioController,
+                                isEnabled: widget.gameController.isRightLength(
+                                  guess,
                                 ),
                               ),
                             );

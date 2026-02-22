@@ -106,6 +106,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
     return ValueListenableBuilder(
       valueListenable: _settingsController!.theme,
       builder: (context, theme, _) {
+        final baseColor = Colors.deepPurple;
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           themeMode: _themeController!.themeMode,
@@ -113,26 +114,26 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
+              seedColor: baseColor,
               brightness: Brightness.light,
-              outline: Colors.deepPurple.shade300,
+              outline: baseColor.shade300,
             ),
-            scaffoldBackgroundColor: Colors.deepPurple.shade50,
+            scaffoldBackgroundColor: baseColor.shade50,
             appBarTheme: AppBarTheme(
               backgroundColor: Colors.transparent,
               elevation: 0,
               centerTitle: true,
-              titleTextStyle: const TextStyle(
+              titleTextStyle: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
-                color: Colors.black87,
+                color: baseColor.shade300,
               ),
-              iconTheme: IconThemeData(color: Colors.deepPurple.shade300),
+              iconTheme: IconThemeData(color: baseColor.shade300),
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple.shade300,
+                backgroundColor: baseColor.shade300,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -151,13 +152,13 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             useMaterial3: true,
             brightness: Brightness.dark,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
+              seedColor: baseColor,
               brightness: Brightness.dark,
-              outline: Colors.deepPurple.shade200,
+              outline: baseColor.shade200,
             ),
             cardColor: Color(0xFF1E1E2E),
             scaffoldBackgroundColor: const Color(0xFF121212),
-            appBarTheme: const AppBarTheme(
+            appBarTheme: AppBarTheme(
               backgroundColor: Colors.transparent,
               elevation: 0,
               centerTitle: true,
@@ -165,13 +166,13 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
-                color: Colors.white,
+                color: baseColor,
               ),
-              iconTheme: IconThemeData(color: Color(0xFFBB86FC)),
+              iconTheme: IconThemeData(color: baseColor),
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFBB86FC),
+                backgroundColor: baseColor,
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
