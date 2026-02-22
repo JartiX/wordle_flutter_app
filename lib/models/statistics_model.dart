@@ -6,7 +6,8 @@ class StatisticsModel {
   int maxStreak;
   final Map<int, int> winsByAttempts;
 
-  int get gamesWon => winsByAttempts.values.fold(0, (sum, count) => sum + count);
+  int get gamesWon =>
+      winsByAttempts.values.fold(0, (sum, count) => sum + count);
 
   double get winRate => gamesPlayed == 0 ? 0 : (gamesWon / gamesPlayed) * 100;
 
@@ -18,14 +19,14 @@ class StatisticsModel {
   }) : winsByAttempts = Map.from(winsByAttempts);
 
   factory StatisticsModel.initial() {
-    final minAttempts = SettingsModel.allowedAttempts[0];
+    final minAttempts = 1;
     final maxAttempts = SettingsModel.allowedAttempts[1];
 
     return StatisticsModel(
       gamesPlayed: 0,
       currentStreak: 0,
       maxStreak: 0,
-      winsByAttempts: { for (int i = minAttempts; i <= maxAttempts; i++) i: 0 },
+      winsByAttempts: {for (int i = minAttempts; i <= maxAttempts; i++) i: 0},
     );
   }
 

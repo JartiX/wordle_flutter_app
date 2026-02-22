@@ -31,11 +31,11 @@ class StatisticsPage extends StatelessWidget {
         children: [
           Text(
             title,
-            style: textTheme.bodyMedium?.copyWith(fontSize: 14 * scale),
+            style: textTheme.titleLarge?.copyWith(fontSize: 14 * scale),
           ),
           Text(
             value,
-            style: textTheme.bodyLarge?.copyWith(
+            style: textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: 16 * scale,
             ),
@@ -94,25 +94,25 @@ class StatisticsPage extends StatelessWidget {
                         ),
                         _statRow(
                           context,
-                          "Победы",
+                          "Всего побед",
                           stats.gamesWon.toString(),
                           scale: scale,
                         ),
                         _statRow(
                           context,
-                          "Текущая серия",
+                          "Текущая серия побед",
                           stats.currentStreak.toString(),
                           scale: scale,
                         ),
                         _statRow(
                           context,
-                          "Макс серия",
+                          "Максимальная серия побед",
                           stats.maxStreak.toString(),
                           scale: scale,
                         ),
                         _statRow(
                           context,
-                          "Win rate",
+                          "Процент побед",
                           "${stats.winRate.toStringAsFixed(1)}%",
                           scale: scale,
                         ),
@@ -124,7 +124,7 @@ class StatisticsPage extends StatelessWidget {
                 SizedBox(height: 16 * scale),
 
                 Text(
-                  "Победы по количеству попыток",
+                  "Победы",
                   style: textTheme.titleLarge?.copyWith(
                     fontSize: (textTheme.titleLarge?.fontSize ?? 20) * scale,
                   ),
@@ -133,13 +133,22 @@ class StatisticsPage extends StatelessWidget {
 
                 SizedBox(height: 16 * scale),
 
-                SizedBox(
-                  height: 200 * scale,
-                  child: AttemptsBarChart(
-                    winsByAttempts: stats.winsByAttempts,
-                    colorScheme: colorScheme,
-                    textTheme: textTheme,
+                AttemptsBarChart(
+                  winsByAttempts: stats.winsByAttempts,
+                  colorScheme: colorScheme,
+                  textTheme: textTheme,
+                  maxHeight: 120 * scale,
+                ),
+
+                SizedBox(height: 8 * scale),
+
+                Text(
+                  "Количество попыток",
+                  style: textTheme.titleLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14 * scale,
                   ),
+                  textAlign: TextAlign.center,
                 ),
 
                 SizedBox(height: 32 * scale),
