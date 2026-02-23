@@ -234,15 +234,15 @@ class _KeyboardKeyState extends State<_KeyboardKey>
             final fromGradientColors = fromHasStatus
                 ? [fromColor.withValues(alpha: 0.9), fromColor]
                 : [
-                    theme.colorScheme.primary.withValues(alpha: 0.05),
-                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                    theme.colorScheme.surfaceBright .withValues(alpha: 0.2),
+                    theme.colorScheme.surfaceBright.withValues(alpha: 0.85),
                   ];
 
             final toGradientColors = toHasStatus
                 ? [toColor.withValues(alpha: 0.9), toColor]
                 : [
-                    theme.colorScheme.primary.withValues(alpha: 0.05),
-                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                    theme.colorScheme.surfaceBright.withValues(alpha: 0.2),
+                    theme.colorScheme.surfaceBright.withValues(alpha: 0.85),
                   ];
 
             final gradientColors = [
@@ -568,6 +568,7 @@ class _WideEnterButtonState extends State<_WideEnterButton>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final color = theme.colorScheme.primary;
+    final baseColor = theme.colorScheme.surfaceBright;
     const radius = 16.0;
     const borderWidth = 2.0;
 
@@ -664,8 +665,8 @@ class _WideEnterButtonState extends State<_WideEnterButton>
                         colors: widget.isEnabled
                             ? [color.withValues(alpha: 0.9), color]
                             : [
-                                color.withValues(alpha: 0.2),
-                                color.withValues(alpha: 0.3),
+                                baseColor.withValues(alpha: 0.2),
+                                baseColor.withValues(alpha: 0.85),
                               ],
                       ),
                     ),
